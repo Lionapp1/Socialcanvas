@@ -23,6 +23,7 @@ enum class TemplateType(
     SKOR("Skor", "Maç sonucu ve skor kartı", "⚽", "3 - 1", "MAÇ SONU"),
     ALINTI("Alıntı", "Söz ve alıntı kartı", "💬", "\"Başarı tesadüf değildir.\"", "— Anonim"),
     THREADS("Threads / X", "Sosyal medya paylaşımı", "𝕏", "Bugün neler oldu?", "Kısa ve net"),
+    ISTATISTIK("İnfografik", "İstatistik ve veri görseli", "▥", "62%", "TOPA SAHİP OLMA"),
     BOS("Boş Tuval", "Sıfırdan tasarım", "✨", "BAŞLIK", "Alt metin buraya")
 }
 
@@ -56,8 +57,8 @@ data class EditorState(
     val imageX: Float = 0f,
     val imageY: Float = 0f,
     val imageScale: Float = 1f,
-    val headlineSize: Float = when (template) { TemplateType.TRANSFER, TemplateType.HABER -> 31f; TemplateType.SKOR -> 52f; else -> 34f },
-    val subtitleSize: Float = when (template) { TemplateType.TRANSFER, TemplateType.HABER -> 12f; TemplateType.SKOR -> 16f; else -> 17f },
+    val headlineSize: Float = when (template) { TemplateType.TRANSFER, TemplateType.HABER -> 31f; TemplateType.SKOR, TemplateType.ISTATISTIK -> 52f; else -> 34f },
+    val subtitleSize: Float = when (template) { TemplateType.TRANSFER, TemplateType.HABER -> 12f; TemplateType.SKOR, TemplateType.ISTATISTIK -> 14f; else -> 17f },
     val headlineColor: Long = when (template) { TemplateType.TRANSFER, TemplateType.HABER, TemplateType.SKOR -> 0xFFFFFFFF; else -> 0xFFFFB700 },
     val subtitleColor: Long = 0xFFFFFFFF,
     val font: CanvasFont = when (template) { TemplateType.TRANSFER, TemplateType.HABER -> CanvasFont.CONDENSED; TemplateType.ALINTI -> CanvasFont.SERIF; else -> CanvasFont.BOLD },
