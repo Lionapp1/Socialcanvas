@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.forzagundem.socialcanvas.data.AspectRatio
 import com.forzagundem.socialcanvas.data.CanvasFont
 import com.forzagundem.socialcanvas.data.DesignExporter
+import com.forzagundem.socialcanvas.data.PersonCutoutProcessor
 import com.forzagundem.socialcanvas.data.EditorState
 import com.forzagundem.socialcanvas.data.TemplateType
 import com.forzagundem.socialcanvas.data.TextAlignMode
@@ -72,6 +73,7 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var exporting by remember { mutableStateOf(false) }
+    var cuttingOut by remember { mutableStateOf(false) }
 
     fun keepUri(uri: android.net.Uri): String {
         runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
@@ -176,6 +178,34 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                     EditorSlider("Fotoğraf dikey konum", state.imageY, -0.5f..0.5f) { state = state.copy(imageY = it) }
                     DarkOutlinedButton("Fotoğrafı kaldır", { state = state.copy(imageUri = null, imageX = 0f, imageY = 0f, imageScale = 1f) }, Modifier.fillMaxWidth())
                 }
+
+                Spacer(Modifier.height(18.dp))
+                SectionLabel("Yapay zekâ kişi odağı")
+                GoldButton(
+                    if (cuttingOut) "Kişi ayrıştırılıyor…" else "Fotoğraftan kişiyi otomatik ayır",
+                    {
+                        val source = state.imageUri
+                        if (source == null || cuttingOut) {
+                            scope.launch { snackbar.showSnackbar("Önce arka plan fotoğrafı ekle.") }
+                        } else {
+                            scope.launch {
+                                cuttingOut = true
+                                try {
+                                    val cutout = PersonCutoutProcessor.createTransparentCutout(context, android.net.Uri.parse(source))
+                                    state = state.copy(subjectUri = cutout.toString(), subjectOnTop = true, darken = 0.62f, subjectScale = 1.08f)
+                                    snackbar.showSnackbar("Kişi ayrı katmana alındı. Boyutunu ve konumunu ayarlayabilirsin.")
+                                } catch (error: Exception) {
+                                    snackbar.showSnackbar("Kişi ayrılamadı: " + (error.localizedMessage ?: "Fotoğrafı kontrol et"))
+                                } finally {
+                                    cuttingOut = false
+                                }
+                            }
+                        }
+                    },
+                    Modifier.fillMaxWidth(),
+                    enabled = !cuttingOut
+                )
+                Text("Kişi otomatik ayrılır, öne alınır ve arka plan karartılır. Sonuç fotoğrafın netliğine ve kişi sayısına bağlıdır.", color = TextSecondary, fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
 
                 Spacer(Modifier.height(18.dp))
                 SectionLabel("Kişi katmanı · şeffaf PNG")
