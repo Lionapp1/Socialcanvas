@@ -223,6 +223,15 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                 }
 
                 Spacer(Modifier.height(18.dp))
+                if (state.template == TemplateType.ISTATISTIK) {
+                    Spacer(Modifier.height(14.dp))
+                    SectionLabel("İnfografik veri çubukları")
+                    EditorSlider("Veri 1", state.statOne, 0f..1f) { state = state.copy(statOne = it) }
+                    EditorSlider("Veri 2", state.statTwo, 0f..1f) { state = state.copy(statTwo = it) }
+                    EditorSlider("Veri 3", state.statThree, 0f..1f) { state = state.copy(statThree = it) }
+                    Text("Çubuklar örnek veri gösterir. Gerçek istatistikleri kendin girip kaynağı doğrula.", color = TextSecondary, fontSize = 11.sp)
+                }
+
                 SectionLabel("Metin içeriği")
                 AppTextField(state.headline, { state = state.copy(headline = it) }, "Ana başlık", singleLine = false)
                 Spacer(Modifier.height(10.dp))
