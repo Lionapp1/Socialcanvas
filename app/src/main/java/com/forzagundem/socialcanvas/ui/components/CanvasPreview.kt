@@ -106,10 +106,10 @@ fun CanvasPreview(
                     Brush.radialGradient(
                         colors = listOf(Color(0x20FFFFFF), Color.Transparent),
                         center = androidx.compose.ui.geometry.Offset(
-                            with(density) { maxWidth.toPx() } * (0.5f + state.subjectX),
-                            with(density) { maxHeight.toPx() } * (0.52f + state.subjectY)
+                            with(density) { previewWidth.toPx() } * (0.5f + state.subjectX),
+                            with(density) { previewHeight.toPx() } * (0.52f + state.subjectY)
                         ),
-                        radius = maxOf(with(density) { maxWidth.toPx() }, with(density) { maxHeight.toPx() }) * 0.62f
+                        radius = maxOf(with(density) { previewWidth.toPx() }, with(density) { previewHeight.toPx() }) * 0.62f
                     )
                 ))
             }
