@@ -68,7 +68,7 @@ object DesignExporter {
             val top = height * 0.70f
             val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(46, 255, 255, 255); strokeWidth = 18f; strokeCap = Paint.Cap.ROUND }
             val bar = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(255, 183, 0); strokeWidth = 18f; strokeCap = Paint.Cap.ROUND }
-            listOf(0.62f, 0.78f, 0.44f).forEachIndexed { index, fraction ->
+            listOf(state.statOne, state.statTwo, state.statThree).forEachIndexed { index, fraction ->
                 val y = top + index * 42f
                 canvas.drawLine(left, y, right, y, track)
                 canvas.drawLine(left, y, left + (right - left) * fraction, y, bar)
