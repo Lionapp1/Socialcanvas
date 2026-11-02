@@ -101,6 +101,18 @@ fun CanvasPreview(
             }
 
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
+            if (state.subjectUri != null) {
+                Box(Modifier.fillMaxSize().background(
+                    Brush.radialGradient(
+                        colors = listOf(Color(0x20FFFFFF), Color.Transparent),
+                        center = androidx.compose.ui.geometry.Offset(
+                            with(density) { maxWidth.toPx() } * (0.5f + state.subjectX),
+                            with(density) { maxHeight.toPx() } * (0.52f + state.subjectY)
+                        ),
+                        radius = maxOf(with(density) { maxWidth.toPx() }, with(density) { maxHeight.toPx() }) * 0.62f
+                    )
+                ))
+            }
 
             if (state.subjectUri != null && !state.subjectOnTop) {
                 SubjectLayer(state, onStateChange)
