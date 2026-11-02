@@ -51,6 +51,29 @@ object DesignExporter {
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.color = Color.WHITE
 
+        if (state.subjectUri != null) {
+            val focusGlow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = android.graphics.RadialGradient(
+                    width * (0.5f + state.subjectX), height * (0.52f + state.subjectY),
+                    max(width, height) * 0.62f,
+                    intArrayOf(Color.argb(32, 255, 255, 255), Color.TRANSPARENT),
+                    null, Shader.TileMode.CLAMP
+                )
+            }
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), focusGlow)
+        }
+        if (state.template == TemplateType.ISTATISTIK) {
+            val left = width * 0.12f
+            val right = width * 0.88f
+            val top = height * 0.70f
+            val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(46, 255, 255, 255); strokeWidth = 18f; strokeCap = Paint.Cap.ROUND }
+            val bar = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(255, 183, 0); strokeWidth = 18f; strokeCap = Paint.Cap.ROUND }
+            listOf(0.62f, 0.78f, 0.44f).forEachIndexed { index, fraction ->
+                val y = top + index * 42f
+                canvas.drawLine(left, y, right, y, track)
+                canvas.drawLine(left, y, left + (right - left) * fraction, y, bar)
+            }
+        }
         if (state.template == TemplateType.TRANSFER || state.template == TemplateType.HABER) {
             val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = Color.argb(14, 255, 255, 255)
