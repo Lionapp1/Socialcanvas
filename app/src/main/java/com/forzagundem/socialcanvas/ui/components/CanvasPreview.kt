@@ -3,6 +3,7 @@ package com.forzagundem.socialcanvas.ui.components
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -22,114 +23,138 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.forzagundem.socialcanvas.data.AspectRatio
+import com.forzagundem.socialcanvas.data.CanvasFont
 import com.forzagundem.socialcanvas.data.EditorState
+import com.forzagundem.socialcanvas.data.TextAlignMode
 import com.forzagundem.socialcanvas.ui.theme.Gold
 import com.forzagundem.socialcanvas.ui.theme.TextPrimary
 import com.forzagundem.socialcanvas.ui.theme.TextSecondary
 
 @Composable
-fun CanvasPreview(state: EditorState, modifier: Modifier = Modifier) {
+fun CanvasPreview(
+    state: EditorState,
+    modifier: Modifier = Modifier,
+    onStateChange: (EditorState) -> Unit = {}
+) {
     val darken by animateFloatAsState(state.darken, label = "darken")
-
     BoxWithConstraints(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         val targetAspect = state.ratio.aspect
-        val previewWidth = if (maxWidth / maxHeight > targetAspect) {
-            maxHeight * targetAspect * 0.96f
-        } else {
-            maxWidth * 0.96f
-        }
+        val previewWidth = if (maxWidth / maxHeight > targetAspect) maxHeight * targetAspect * 0.96f else maxWidth * 0.96f
         val previewHeight = previewWidth / targetAspect
-
         Box(
-            modifier = Modifier.width(previewWidth).height(previewHeight)
-                .clip(RoundedCornerShape(20.dp))
-                .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(20.dp))
+            Modifier.width(previewWidth).height(previewHeight).clip(RoundedCornerShape(20.dp))
+                .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
                 .background(Brush.verticalGradient(listOf(Color(0xFF252C3D), Color(0xFF080A10))))
         ) {
             if (state.imageUri != null) {
                 AsyncImage(
                     model = state.imageUri,
-                    contentDescription = "Tasarım arka plan fotoğrafı",
-                    modifier = Modifier.fillMaxSize(),
+                    contentDescription = "Arka plan fotoğrafı",
+                    modifier = Modifier.fillMaxSize().graphicsLayer {
+                        scaleX = state.imageScale
+                        scaleY = state.imageScale
+                        translationX = state.imageX * size.width
+                        translationY = state.imageY * size.height
+                    }.pointerInput(state.imageUri) {
+                        detectDragGestures { change, drag ->
+                            change.consume()
+                            onStateChange(state.copy(
+                                imageX = (state.imageX + drag.x / size.width).coerceIn(-1f, 1f),
+                                imageY = (state.imageY + drag.y / size.height).coerceIn(-1f, 1f)
+                            ))
+                        }
+                    },
                     contentScale = ContentScale.Crop
                 )
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Box(
-                        Modifier.fillMaxWidth(0.52f).aspectRatio(0.72f)
-                            .clip(RoundedCornerShape(18.dp))
+                        Modifier.fillMaxWidth(0.52f).aspectRatio(0.72f).clip(RoundedCornerShape(18.dp))
                             .background(Brush.verticalGradient(listOf(Color(0xFF59647D), Color(0xFF20283A))))
                             .padding(12.dp),
                         contentAlignment = Alignment.Center
-                    ) {
-                        Text(if (state.focusPerson) "👤" else "＋", fontSize = 42.sp)
-                    }
+                    ) { Text("＋", fontSize = 42.sp, color = TextPrimary) }
                 }
-            }
-
-            if (state.focusPerson) {
-                Box(
-                    Modifier.fillMaxSize().background(
-                        Brush.radialGradient(
-                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.38f))
-                        )
-                    )
-                )
             }
 
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
 
+            if (state.subjectUri != null && !state.subjectOnTop) {
+                SubjectLayer(state, onStateChange)
+            }
+
             Column(
-                Modifier.fillMaxSize().padding(22.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                Modifier.fillMaxWidth(0.90f).align(Alignment.Center)
+                    .graphicsLayer {
+                        translationX = state.textX * size.width
+                        translationY = state.textY * size.height
+                    }
+                    .pointerInput(state.textX, state.textY) {
+                        detectDragGestures { change, drag ->
+                            change.consume()
+                            onStateChange(state.copy(
+                                textX = (state.textX + drag.x / size.width).coerceIn(-0.45f, 0.45f),
+                                textY = (state.textY + drag.y / size.height).coerceIn(-0.45f, 0.45f)
+                            ))
+                        }
+                    },
+                horizontalAlignment = when (state.textAlign) {
+                    TextAlignMode.LEFT -> Alignment.Start
+                    TextAlignMode.CENTER -> Alignment.CenterHorizontally
+                    TextAlignMode.RIGHT -> Alignment.End
+                }
             ) {
-                if (state.textBehind) Spacer(Modifier.height(24.dp)) else Spacer(Modifier.weight(1f))
                 Text(
                     state.headline,
-                    color = Gold,
-                    fontSize = when (state.ratio) {
-                        AspectRatio.STORY -> 27.sp
-                        AspectRatio.SQUARE -> 25.sp
-                        AspectRatio.THREADS -> 23.sp
-                        else -> 24.sp
-                    },
-                    fontWeight = FontWeight.Black,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 30.sp
+                    color = Color(state.headlineColor),
+                    fontSize = state.headlineSize.sp,
+                    fontWeight = if (state.font == CanvasFont.MODERN || state.font == CanvasFont.SERIF) FontWeight.SemiBold else FontWeight.Black,
+                    fontFamily = state.font.toFontFamily(),
+                    textAlign = state.textAlign.toCompose(),
+                    lineHeight = (state.headlineSize * 1.12f).sp,
+                    style = androidx.compose.ui.text.TextStyle(
+                        shadow = if (state.textShadow) Shadow(Color.Black.copy(alpha = 0.7f), androidx.compose.ui.geometry.Offset(0f, 3f), 6f) else null
+                    )
                 )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    state.subtitle,
-                    color = TextPrimary.copy(alpha = 0.96f),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 20.sp
-                )
-                if (state.textBehind) Spacer(Modifier.weight(1f)) else Spacer(Modifier.height(18.dp))
+                if (state.subtitle.isNotBlank()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        state.subtitle,
+                        color = Color(state.subtitleColor),
+                        fontSize = state.subtitleSize.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = state.font.toFontFamily(),
+                        textAlign = state.textAlign.toCompose(),
+                        lineHeight = (state.subtitleSize * 1.25f).sp
+                    )
+                }
+            }
+
+            if (state.subjectUri != null && state.subjectOnTop) {
+                SubjectLayer(state, onStateChange)
             }
 
             if (state.showSafeArea) {
-                Box(
-                    Modifier.fillMaxSize().padding(10.dp)
-                        .border(1.dp, Gold.copy(alpha = 0.28f), RoundedCornerShape(14.dp))
-                )
+                Box(Modifier.fillMaxSize().padding(10.dp).border(1.dp, Gold.copy(alpha = 0.28f), RoundedCornerShape(14.dp)))
             }
-
             Text(
                 state.ratio.label,
                 Modifier.align(Alignment.TopEnd).padding(10.dp)
-                    .background(Color.Black.copy(alpha = 0.58f), RoundedCornerShape(8.dp))
+                    .background(Color.Black.copy(alpha = 0.62f), RoundedCornerShape(8.dp))
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 color = TextSecondary,
                 fontSize = 10.sp,
@@ -137,4 +162,41 @@ fun CanvasPreview(state: EditorState, modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+@Composable
+private fun SubjectLayer(state: EditorState, onStateChange: (EditorState) -> Unit) {
+    AsyncImage(
+        model = state.subjectUri,
+        contentDescription = "Ön plan kişi görseli",
+        modifier = Modifier.fillMaxSize().graphicsLayer {
+            scaleX = state.subjectScale
+            scaleY = state.subjectScale
+            translationX = state.subjectX * size.width
+            translationY = state.subjectY * size.height
+        }.pointerInput(state.subjectUri) {
+            detectDragGestures { change, drag ->
+                change.consume()
+                onStateChange(state.copy(
+                    subjectX = (state.subjectX + drag.x / size.width).coerceIn(-0.8f, 0.8f),
+                    subjectY = (state.subjectY + drag.y / size.height).coerceIn(-0.8f, 0.8f)
+                ))
+            }
+        },
+        contentScale = ContentScale.Fit
+    )
+}
+
+private fun CanvasFont.toFontFamily(): FontFamily = when (this) {
+    CanvasFont.MODERN -> FontFamily.SansSerif
+    CanvasFont.BOLD -> FontFamily.SansSerif
+    CanvasFont.SERIF -> FontFamily.Serif
+    CanvasFont.MONO -> FontFamily.Monospace
+    CanvasFont.CONDENSED -> FontFamily.SansSerif
+}
+
+private fun TextAlignMode.toCompose(): TextAlign = when (this) {
+    TextAlignMode.LEFT -> TextAlign.Start
+    TextAlignMode.CENTER -> TextAlign.Center
+    TextAlignMode.RIGHT -> TextAlign.End
 }
