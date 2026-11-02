@@ -22,7 +22,7 @@ import kotlin.math.min
 
 object DesignExporter {
     suspend fun save(context: Context, state: EditorState): Uri = withContext(Dispatchers.IO) {
-        val width = 1080
+        val width = 2160
         val height = (width / state.ratio.aspect).toInt().coerceAtLeast(1)
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -91,7 +91,7 @@ object DesignExporter {
             else -> "sans-serif"
         }
         paint.typeface = Typeface.create(family, typefaceStyle)
-        paint.textSize = state.headlineSize * 2.15f
+        paint.textSize = state.headlineSize * 4.3f
         paint.color = state.headlineColor.toInt()
         paint.textAlign = when (state.textAlign) {
             TextAlignMode.LEFT -> Paint.Align.LEFT
@@ -111,7 +111,7 @@ object DesignExporter {
 
         if (state.subtitle.isNotBlank()) {
             paint.typeface = Typeface.create(family, Typeface.NORMAL)
-            paint.textSize = state.subtitleSize * 2.15f
+            paint.textSize = state.subtitleSize * 4.3f
             paint.color = state.subtitleColor.toInt()
             drawWrapped(canvas, state.subtitle, anchorX, textY + paint.textSize * 1.7f, paint, textWidth)
         }
