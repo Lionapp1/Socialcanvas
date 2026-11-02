@@ -87,7 +87,13 @@ fun CanvasPreview(
                             .background(Brush.verticalGradient(listOf(Color(0xFF59647D), Color(0xFF20283A))))
                             .padding(12.dp),
                         contentAlignment = Alignment.Center
-                    ) { Text("＋", fontSize = 42.sp, color = TextPrimary) }
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("＋", fontSize = 42.sp, color = Gold, fontWeight = FontWeight.Light)
+                            Text("Fotoğrafını ekle", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Canlı önizleme burada görünecek", color = TextSecondary, fontSize = 9.sp)
+                        }
+                    }
                 }
             }
 
