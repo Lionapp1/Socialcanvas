@@ -28,7 +28,7 @@ object DesignExporter {
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
-        paint.shader = LinearGradient(0f, 0f, 0f, height.toFloat(), Color.rgb(31, 39, 57), Color.rgb(7, 9, 15), Shader.TileMode.CLAMP)
+        paint.shader = LinearGradient(0f, 0f, 0f, height.toFloat(), Color.rgb(25, 25, 25), Color.rgb(8, 8, 8), Shader.TileMode.CLAMP)
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
 
@@ -61,7 +61,7 @@ object DesignExporter {
             while (gx <= width) { canvas.drawLine(gx, 0f, gx, height.toFloat(), gridPaint); gx += step }
             var gy = 0f
             while (gy <= height) { canvas.drawLine(0f, gy, width.toFloat(), gy, gridPaint); gy += step }
-            gridPaint.color = Color.rgb(85, 230, 224)
+            gridPaint.color = Color.rgb(255, 183, 0)
             gridPaint.alpha = 185
             canvas.drawRect(0f, 0f, width * 0.48f, 5f, gridPaint)
         }
@@ -83,7 +83,7 @@ object DesignExporter {
 
         if (!state.subjectOnTop) drawSubject()
 
-        val typefaceStyle = if (state.font == CanvasFont.BOLD) Typeface.BOLD else Typeface.NORMAL
+        val typefaceStyle = if (state.font == CanvasFont.BOLD || state.font == CanvasFont.CONDENSED) Typeface.BOLD else Typeface.NORMAL
         val family = when (state.font) {
             CanvasFont.SERIF -> "serif"
             CanvasFont.MONO -> "monospace"
