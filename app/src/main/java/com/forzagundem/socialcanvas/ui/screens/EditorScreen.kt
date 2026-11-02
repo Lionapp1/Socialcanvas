@@ -48,6 +48,7 @@ import com.forzagundem.socialcanvas.data.CanvasFont
 import com.forzagundem.socialcanvas.data.DesignExporter
 import com.forzagundem.socialcanvas.data.PersonCutoutProcessor
 import com.forzagundem.socialcanvas.data.EditorState
+import com.forzagundem.socialcanvas.data.applyProfessionalLayout
 import com.forzagundem.socialcanvas.data.TemplateType
 import com.forzagundem.socialcanvas.data.TextAlignMode
 import com.forzagundem.socialcanvas.ui.components.*
@@ -168,6 +169,19 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                     }
                 }
                 Text(state.ratio.platform, color = TextSecondary, fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
+                Spacer(Modifier.height(12.dp))
+                GoldButton(
+                    "Profesyonel otomatik yerleşimi uygula",
+                    {
+                        state = state.applyProfessionalLayout()
+                        scope.launch { snackbar.showSnackbar("Şablonun profesyonel yerleşimi uygulandı. Metin, ışık ve kişi konumu ayarlandı.") }
+                    },
+                    Modifier.fillMaxWidth()
+                )
+                Text(
+                    "Şablona göre yazı karakteri, kalınlık, ölçü, hizalama, kişi konumu ve karartma otomatik ayarlanır. İstersen sonradan tek tek değiştirebilirsin.",
+                    color = TextSecondary, fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp)
+                )
 
                 Spacer(Modifier.height(18.dp))
                 SectionLabel("Arka plan ve fotoğraf")
@@ -219,7 +233,7 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                     EditorSlider("Kişi yatay konum", state.subjectX, -0.8f..0.8f) { state = state.copy(subjectX = it) }
                     EditorSlider("Kişi dikey konum", state.subjectY, -0.8f..0.8f) { state = state.copy(subjectY = it) }
                     DarkOutlinedButton("Kişi katmanını kaldır", { state = state.copy(subjectUri = null, subjectX = 0f, subjectY = 0.08f, subjectScale = 1f) }, Modifier.fillMaxWidth())
-                    Text("Not: Kişinin yazının arkasında görünmesi için arka planı şeffaf PNG kullan. Fotoğraftan otomatik kişi ayırma ayrıca eklenecek.", color = TextSecondary, fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
+                    Text("Not: Otomatik ayırma aracı kişiyi şeffaf PNG katmanına dönüştürür. Yazının arkasında görünmesi için katman sırasını buradan değiştirebilirsin.", color = TextSecondary, fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
                 }
 
                 Spacer(Modifier.height(18.dp))
