@@ -2,6 +2,7 @@ package com.forzagundem.socialcanvas.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
@@ -103,8 +104,9 @@ fun CanvasPreview(
                 SubjectLayer(state, onStateChange)
             }
 
+            val textWidth = if (state.template == com.forzagundem.socialcanvas.data.TemplateType.TRANSFER || state.template == com.forzagundem.socialcanvas.data.TemplateType.HABER) 0.48f else 0.90f
             Column(
-                Modifier.fillMaxWidth(0.90f).align(Alignment.Center)
+                Modifier.fillMaxWidth(textWidth).align(Alignment.Center)
                     .graphicsLayer {
                         translationX = state.textX * size.width
                         translationY = state.textY * size.height
@@ -152,6 +154,24 @@ fun CanvasPreview(
 
             if (state.subjectUri != null && state.subjectOnTop) {
                 SubjectLayer(state, onStateChange)
+            }
+
+            if (state.template == com.forzagundem.socialcanvas.data.TemplateType.TRANSFER || state.template == com.forzagundem.socialcanvas.data.TemplateType.HABER) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val step = 34.dp.toPx()
+                    val grid = Color.White.copy(alpha = 0.055f)
+                    var x = 0f
+                    while (x <= size.width) {
+                        drawLine(grid, androidx.compose.ui.geometry.Offset(x, 0f), androidx.compose.ui.geometry.Offset(x, size.height), 0.7.dp.toPx())
+                        x += step
+                    }
+                    var y = 0f
+                    while (y <= size.height) {
+                        drawLine(grid, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), 0.7.dp.toPx())
+                        y += step
+                    }
+                    drawRect(Color(0xFF55E6E0).copy(alpha = 0.72f), size = androidx.compose.ui.geometry.Size(size.width * 0.48f, 2.dp.toPx()))
+                }
             }
 
             if (state.showSafeArea) {
