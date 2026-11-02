@@ -20,6 +20,11 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.AlternateEmail
+import androidx.compose.material.icons.outlined.Article
+import androidx.compose.material.icons.outlined.FormatQuote
+import androidx.compose.material.icons.outlined.SportsSoccer
+import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +35,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.forzagundem.socialcanvas.data.TemplateType
 import com.forzagundem.socialcanvas.ui.theme.Bg
 import com.forzagundem.socialcanvas.ui.theme.Border
@@ -48,7 +55,8 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Bg)
-            .padding(top = 48.dp, start = 20.dp, end = 20.dp, bottom = 16.dp)
+            .statusBarsPadding()
+            .padding(top = 18.dp, start = 20.dp, end = 20.dp, bottom = 16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -135,7 +143,11 @@ private fun TemplateCard(
                 .background(CardElevated),
             contentAlignment = Alignment.Center
         ) {
-            Text(template.iconEmoji, fontSize = 32.sp)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(imageVector = templateIcon(template), contentDescription = template.title, tint = Gold, modifier = Modifier.size(30.dp))
+                Spacer(Modifier.height(5.dp))
+                Text("SOCIAL CANVAS  /  " + template.title.uppercase(), color = TextMuted, fontSize = 8.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.7.sp)
+            }
         }
         Spacer(Modifier.height(12.dp))
         Text(
@@ -151,4 +163,15 @@ private fun TemplateCard(
             modifier = Modifier.padding(top = 2.dp)
         )
     }
+}
+
+
+@Composable
+private fun templateIcon(template: TemplateType): ImageVector = when (template) {
+    TemplateType.HABER -> androidx.compose.material.icons.Icons.Outlined.Article
+    TemplateType.TRANSFER -> androidx.compose.material.icons.Icons.Outlined.SwapHoriz
+    TemplateType.SKOR -> androidx.compose.material.icons.Icons.Outlined.SportsSoccer
+    TemplateType.ALINTI -> androidx.compose.material.icons.Icons.Outlined.FormatQuote
+    TemplateType.THREADS -> androidx.compose.material.icons.Icons.Outlined.AlternateEmail
+    TemplateType.BOS -> androidx.compose.material.icons.Icons.Outlined.AutoAwesome
 }
