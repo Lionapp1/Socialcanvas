@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AlternateEmail
 import androidx.compose.material.icons.outlined.Article
 import androidx.compose.material.icons.outlined.FormatQuote
+import androidx.compose.material.icons.outlined.InsertChart
 import androidx.compose.material.icons.outlined.SportsSoccer
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Icon
@@ -173,5 +174,6 @@ private fun templateIcon(template: TemplateType): ImageVector = when (template) 
     TemplateType.SKOR -> androidx.compose.material.icons.Icons.Outlined.SportsSoccer
     TemplateType.ALINTI -> androidx.compose.material.icons.Icons.Outlined.FormatQuote
     TemplateType.THREADS -> androidx.compose.material.icons.Icons.Outlined.AlternateEmail
+    TemplateType.ISTATISTIK -> androidx.compose.material.icons.Icons.Outlined.InsertChart
     TemplateType.BOS -> androidx.compose.material.icons.Icons.Outlined.AutoAwesome
 }
