@@ -65,7 +65,9 @@ fun CanvasPreview(state: EditorState, modifier: Modifier = Modifier) {
                             .background(Brush.verticalGradient(listOf(Color(0xFF59647D), Color(0xFF20283A))))
                             .padding(12.dp),
                         contentAlignment = Alignment.Center
-                    ) { Text(if (state.focusPerson) "👤" else "＋", fontSize = 42.sp) }
+            if (state.focusPerson) {
+                Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.38f)))))
+            }
                 }
             }
             if (state.focusPerson) {\n                Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.38f)))))\n            }\n            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
