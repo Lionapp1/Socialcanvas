@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SocialCanvas" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#090A0E</item>
+        <item name="android:navigationBarColor">#090A0E</item>
+        <item name="android:windowBackground">#090A0E</item>
+        <item name="android:colorAccent">#FFB000</item>
+    </style>
+</resources>
