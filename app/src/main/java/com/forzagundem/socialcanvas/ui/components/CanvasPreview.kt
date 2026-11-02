@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.forzagundem.socialcanvas.data.AspectRatio
@@ -49,6 +50,7 @@ fun CanvasPreview(
     onStateChange: (EditorState) -> Unit = {}
 ) {
     val darken by animateFloatAsState(state.darken, label = "darken")
+    val density = LocalDensity.current
     BoxWithConstraints(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center
