@@ -37,7 +37,6 @@ import com.forzagundem.socialcanvas.ui.theme.TextSecondary
 @Composable
 fun CanvasPreview(state: EditorState, modifier: Modifier = Modifier) {
     val darken by animateFloatAsState(state.darken, label = "darken")
-    val personAlpha by animateFloatAsState(if (state.focusPerson) 1f else 0.78f, label = "person")
 
     BoxWithConstraints(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
