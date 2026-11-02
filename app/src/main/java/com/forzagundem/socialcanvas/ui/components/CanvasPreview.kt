@@ -43,10 +43,16 @@ fun CanvasPreview(state: EditorState, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         val targetAspect = state.ratio.aspect
-        val width = if (maxWidth / maxHeight > targetAspect) maxHeight * targetAspect * 0.96f else maxWidth * 0.96f
-        val height = width / targetAspect
+        val previewWidth = if (maxWidth / maxHeight > targetAspect) {
+            maxHeight * targetAspect * 0.96f
+        } else {
+            maxWidth * 0.96f
+        }
+        val previewHeight = previewWidth / targetAspect
+
         Box(
-            modifier = Modifier.width(width).height(height).clip(RoundedCornerShape(20.dp))
+            modifier = Modifier.width(previewWidth).height(previewHeight)
+                .clip(RoundedCornerShape(20.dp))
                 .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(20.dp))
                 .background(Brush.verticalGradient(listOf(Color(0xFF252C3D), Color(0xFF080A10))))
         ) {
@@ -65,12 +71,24 @@ fun CanvasPreview(state: EditorState, modifier: Modifier = Modifier) {
                             .background(Brush.verticalGradient(listOf(Color(0xFF59647D), Color(0xFF20283A))))
                             .padding(12.dp),
                         contentAlignment = Alignment.Center
-            if (state.focusPerson) {
-                Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.38f)))))
-            }
+                    ) {
+                        Text(if (state.focusPerson) "👤" else "＋", fontSize = 42.sp)
+                    }
                 }
             }
-            if (state.focusPerson) {\n                Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.38f)))))\n            }\n            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
+
+            if (state.focusPerson) {
+                Box(
+                    Modifier.fillMaxSize().background(
+                        Brush.radialGradient(
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.38f))
+                        )
+                    )
+                )
+            }
+
+            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
+
             Column(
                 Modifier.fillMaxSize().padding(22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -90,19 +108,32 @@ fun CanvasPreview(state: EditorState, modifier: Modifier = Modifier) {
                     lineHeight = 30.sp
                 )
                 Spacer(Modifier.height(8.dp))
-                Text(state.subtitle, color = TextPrimary.copy(alpha = 0.96f), fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, lineHeight = 20.sp)
+                Text(
+                    state.subtitle,
+                    color = TextPrimary.copy(alpha = 0.96f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
                 if (state.textBehind) Spacer(Modifier.weight(1f)) else Spacer(Modifier.height(18.dp))
             }
+
             if (state.showSafeArea) {
-                Box(Modifier.fillMaxSize().padding(10.dp).border(1.dp, Gold.copy(alpha = 0.28f), RoundedCornerShape(14.dp)))
+                Box(
+                    Modifier.fillMaxSize().padding(10.dp)
+                        .border(1.dp, Gold.copy(alpha = 0.28f), RoundedCornerShape(14.dp))
+                )
             }
+
             Text(
                 state.ratio.label,
                 Modifier.align(Alignment.TopEnd).padding(10.dp)
                     .background(Color.Black.copy(alpha = 0.58f), RoundedCornerShape(8.dp))
                     .padding(horizontal = 8.dp, vertical = 4.dp),
-                color = TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Medium
+                color = TextSecondary,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium
             )
         }
     }
