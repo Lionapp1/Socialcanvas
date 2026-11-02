@@ -69,7 +69,7 @@ fun CanvasPreview(state: EditorState, modifier: Modifier = Modifier) {
                     ) { Text(if (state.focusPerson) "👤" else "＋", fontSize = 42.sp) }
                 }
             }
-            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
+            if (state.focusPerson) {\n                Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.38f)))))\n            }\n            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
             Column(
                 Modifier.fillMaxSize().padding(22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
