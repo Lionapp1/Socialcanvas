@@ -51,6 +51,21 @@ object DesignExporter {
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.color = Color.WHITE
 
+        if (state.template == TemplateType.TRANSFER || state.template == TemplateType.HABER) {
+            val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.argb(14, 255, 255, 255)
+                strokeWidth = 1.5f
+            }
+            val step = 108f
+            var gx = 0f
+            while (gx <= width) { canvas.drawLine(gx, 0f, gx, height.toFloat(), gridPaint); gx += step }
+            var gy = 0f
+            while (gy <= height) { canvas.drawLine(0f, gy, width.toFloat(), gy, gridPaint); gy += step }
+            gridPaint.color = Color.rgb(85, 230, 224)
+            gridPaint.alpha = 185
+            canvas.drawRect(0f, 0f, width * 0.48f, 5f, gridPaint)
+        }
+
         fun drawSubject() {
             state.subjectUri?.let { raw ->
                 decode(context, raw)?.let { subject ->
@@ -84,20 +99,21 @@ object DesignExporter {
             TextAlignMode.RIGHT -> Paint.Align.RIGHT
         }
         if (state.textShadow) paint.setShadowLayer(8f, 0f, 4f, Color.BLACK) else paint.clearShadowLayer()
-        val textX = width * (0.5f + state.textX)
+        val textWidth = width * if (state.template == TemplateType.TRANSFER || state.template == TemplateType.HABER) 0.48f else 0.90f
+        val textX = width * 0.5f + state.textX * textWidth
         val textY = height * (0.5f + state.textY)
         val anchorX = when (state.textAlign) {
-            TextAlignMode.LEFT -> textX - width * 0.42f
+            TextAlignMode.LEFT -> textX - textWidth / 2f
             TextAlignMode.CENTER -> textX
-            TextAlignMode.RIGHT -> textX + width * 0.42f
+            TextAlignMode.RIGHT -> textX + textWidth / 2f
         }
-        drawWrapped(canvas, state.headline, anchorX, textY, paint, width * 0.84f)
+        drawWrapped(canvas, state.headline, anchorX, textY, paint, textWidth)
 
         if (state.subtitle.isNotBlank()) {
             paint.typeface = Typeface.create(family, Typeface.NORMAL)
             paint.textSize = state.subtitleSize * 2.15f
             paint.color = state.subtitleColor.toInt()
-            drawWrapped(canvas, state.subtitle, anchorX, textY + paint.textSize * 1.7f, paint, width * 0.84f)
+            drawWrapped(canvas, state.subtitle, anchorX, textY + paint.textSize * 1.7f, paint, textWidth)
         }
         paint.clearShadowLayer()
 
