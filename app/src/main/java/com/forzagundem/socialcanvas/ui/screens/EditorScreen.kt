@@ -143,11 +143,18 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
         }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            CanvasPreview(state, Modifier.weight(1f).fillMaxWidth().padding(vertical = 8.dp)) {
+            // Both regions use weights. A vertically scrollable, unweighted sibling can
+            // consume the available height and leave the preview with zero measured height.
+            // Keeping the canvas in its own weighted viewport guarantees it stays visible.
+            CanvasPreview(
+                state = state,
+                modifier = Modifier.weight(0.56f).fillMaxWidth().padding(top = 6.dp, bottom = 8.dp)
+            ) {
                 state = it
             }
             Column(
-                Modifier.fillMaxWidth().background(Bg).verticalScroll(rememberScrollState())
+                Modifier.weight(0.44f).fillMaxWidth().background(Bg)
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 SectionLabel("Platform önizlemesi")
