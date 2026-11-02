@@ -100,16 +100,33 @@ fun CanvasPreview(
                 }
             }
 
+            // Cinematic grade: dark upper/lower zones keep the typography readable.
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
+            Box(Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    0f to Color.Black.copy(alpha = 0.28f),
+                    0.42f to Color.Transparent,
+                    0.72f to Color.Black.copy(alpha = 0.10f),
+                    1f to Color.Black.copy(alpha = 0.62f)
+                )
+            ))
             if (state.subjectUri != null) {
+                val focusX = with(density) { previewWidth.toPx() } * (0.5f + state.subjectX)
+                val focusY = with(density) { previewHeight.toPx() } * (0.50f + state.subjectY)
+                val glowRadius = maxOf(with(density) { previewWidth.toPx() }, with(density) { previewHeight.toPx() }) * 0.66f
                 Box(Modifier.fillMaxSize().background(
                     Brush.radialGradient(
-                        colors = listOf(Color(0x20FFFFFF), Color.Transparent),
-                        center = androidx.compose.ui.geometry.Offset(
-                            with(density) { previewWidth.toPx() } * (0.5f + state.subjectX),
-                            with(density) { previewHeight.toPx() } * (0.52f + state.subjectY)
-                        ),
-                        radius = maxOf(with(density) { previewWidth.toPx() }, with(density) { previewHeight.toPx() }) * 0.62f
+                        colors = listOf(Color(0x55FFF0C2), Color(0x22FFB52E), Color.Transparent),
+                        center = androidx.compose.ui.geometry.Offset(focusX, focusY),
+                        radius = glowRadius
+                    )
+                ))
+                // A restrained warm rim light separates the player from a dark stadium background.
+                Box(Modifier.fillMaxSize().background(
+                    Brush.radialGradient(
+                        colors = listOf(Color.Transparent, Color(0x18E6A12A), Color.Transparent),
+                        center = androidx.compose.ui.geometry.Offset(focusX, focusY),
+                        radius = glowRadius * 1.18f
                     )
                 ))
             }
@@ -118,7 +135,14 @@ fun CanvasPreview(
                 SubjectLayer(state, onStateChange)
             }
 
-            val textWidth = if (state.template == com.forzagundem.socialcanvas.data.TemplateType.TRANSFER || state.template == com.forzagundem.socialcanvas.data.TemplateType.HABER) 0.48f else 0.90f
+            val textWidth = when (state.template) {
+                com.forzagundem.socialcanvas.data.TemplateType.TRANSFER,
+                com.forzagundem.socialcanvas.data.TemplateType.HABER,
+                com.forzagundem.socialcanvas.data.TemplateType.THREADS,
+                com.forzagundem.socialcanvas.data.TemplateType.ISTATISTIK -> 0.48f
+                com.forzagundem.socialcanvas.data.TemplateType.ALINTI -> 0.82f
+                else -> 0.90f
+            }
             Column(
                 Modifier.fillMaxWidth(textWidth).align(Alignment.Center)
                     .graphicsLayer {
@@ -198,6 +222,23 @@ fun CanvasPreview(
                         y += step
                     }
                     drawRect(Gold.copy(alpha = 0.78f), size = androidx.compose.ui.geometry.Size(size.width * 0.48f, 2.dp.toPx()))
+                }
+            }
+
+            Canvas(Modifier.fillMaxSize()) {
+                val pad = 18.dp.toPx()
+                when (state.template) {
+                    com.forzagundem.socialcanvas.data.TemplateType.TRANSFER,
+                    com.forzagundem.socialcanvas.data.TemplateType.HABER -> {
+                        drawLine(Gold.copy(alpha = 0.92f), androidx.compose.ui.geometry.Offset(pad, pad), androidx.compose.ui.geometry.Offset(size.width * 0.34f, pad), 3.dp.toPx())
+                        drawLine(Gold.copy(alpha = 0.72f), androidx.compose.ui.geometry.Offset(pad, pad), androidx.compose.ui.geometry.Offset(pad, size.height * 0.30f), 3.dp.toPx())
+                    }
+                    com.forzagundem.socialcanvas.data.TemplateType.ALINTI -> {
+                        val inset = 26.dp.toPx()
+                        drawLine(Gold.copy(alpha = 0.72f), androidx.compose.ui.geometry.Offset(inset, size.height * 0.13f), androidx.compose.ui.geometry.Offset(size.width - inset, size.height * 0.13f), 1.dp.toPx())
+                        drawLine(Gold.copy(alpha = 0.72f), androidx.compose.ui.geometry.Offset(inset, size.height * 0.86f), androidx.compose.ui.geometry.Offset(size.width - inset, size.height * 0.86f), 1.dp.toPx())
+                    }
+                    else -> Unit
                 }
             }
 
