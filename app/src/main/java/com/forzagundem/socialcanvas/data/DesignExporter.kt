@@ -49,17 +49,33 @@ object DesignExporter {
 
         paint.color = Color.argb((state.darken.coerceIn(0f, 0.9f) * 255).toInt(), 0, 0, 0)
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        // Match the preview's cinematic top/bottom contrast treatment.
+        paint.shader = LinearGradient(
+            0f, 0f, 0f, height.toFloat(),
+            intArrayOf(Color.argb(72, 0, 0, 0), Color.TRANSPARENT, Color.argb(24, 0, 0, 0), Color.argb(158, 0, 0, 0)),
+            floatArrayOf(0f, 0.42f, 0.72f, 1f), Shader.TileMode.CLAMP
+        )
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        paint.shader = null
         paint.color = Color.WHITE
 
         if (state.subjectUri != null) {
+            val focusX = width * (0.5f + state.subjectX)
+            val focusY = height * (0.50f + state.subjectY)
+            val glowRadius = max(width, height) * 0.66f
             val focusGlow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 shader = android.graphics.RadialGradient(
-                    width * (0.5f + state.subjectX), height * (0.52f + state.subjectY),
-                    max(width, height) * 0.62f,
-                    intArrayOf(Color.argb(32, 255, 255, 255), Color.TRANSPARENT),
-                    null, Shader.TileMode.CLAMP
+                    focusX, focusY, glowRadius,
+                    intArrayOf(Color.argb(85, 255, 240, 194), Color.argb(34, 255, 181, 46), Color.TRANSPARENT),
+                    floatArrayOf(0f, 0.48f, 1f), Shader.TileMode.CLAMP
                 )
             }
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), focusGlow)
+            focusGlow.shader = android.graphics.RadialGradient(
+                focusX, focusY, glowRadius * 1.18f,
+                intArrayOf(Color.TRANSPARENT, Color.argb(24, 230, 161, 42), Color.TRANSPARENT),
+                floatArrayOf(0f, 0.72f, 1f), Shader.TileMode.CLAMP
+            )
             canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), focusGlow)
         }
         if (state.template == TemplateType.ISTATISTIK) {
@@ -122,7 +138,11 @@ object DesignExporter {
             TextAlignMode.RIGHT -> Paint.Align.RIGHT
         }
         if (state.textShadow) paint.setShadowLayer(8f, 0f, 4f, Color.BLACK) else paint.clearShadowLayer()
-        val textWidth = width * if (state.template == TemplateType.TRANSFER || state.template == TemplateType.HABER) 0.48f else 0.90f
+        val textWidth = width * when (state.template) {
+            TemplateType.TRANSFER, TemplateType.HABER, TemplateType.THREADS, TemplateType.ISTATISTIK -> 0.48f
+            TemplateType.ALINTI -> 0.82f
+            else -> 0.90f
+        }
         val textX = width * 0.5f + state.textX * textWidth
         val textY = height * (0.5f + state.textY)
         val anchorX = when (state.textAlign) {
