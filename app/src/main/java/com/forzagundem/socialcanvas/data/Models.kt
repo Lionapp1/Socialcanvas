@@ -1,10 +1,12 @@
 package com.forzagundem.socialcanvas.data
 
 enum class AspectRatio(val label: String, val widthRatio: Float, val heightRatio: Float, val platform: String) {
-    INSTAGRAM_45("Instagram 4:5", 4f, 5f, "Instagram gönderi"),
-    SQUARE("Kare 1:1", 1f, 1f, "Instagram / Threads"),
+    INSTAGRAM_45("Instagram gönderi 4:5", 4f, 5f, "Instagram akış gönderisi"),
+    SQUARE("Kare 1:1", 1f, 1f, "Instagram / Threads kare"),
     STORY("Story / Reels 9:16", 9f, 16f, "Instagram hikâye ve Reels"),
-    THREADS("Yatay 16:9", 16f, 9f, "Threads / X yatay");
+    THREADS_45("Threads 4:5", 4f, 5f, "Threads dikey görsel"),
+    LANDSCAPE("Yatay 16:9", 16f, 9f, "Threads / X / YouTube"),
+    PINTEREST("Pinterest 2:3", 2f, 3f, "Pinterest pin");
 
     val aspect: Float get() = widthRatio / heightRatio
 }
