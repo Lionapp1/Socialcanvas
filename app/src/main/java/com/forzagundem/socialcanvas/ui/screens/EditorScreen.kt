@@ -117,8 +117,8 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 SectionLabel("Görünüm seçenekleri")
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ToolToggle("Kişi odağı", state.focusPerson, { state = state.copy(focusPerson = !state.focusPerson) }, "👤")
-                    ToolToggle("Metin üstte", !state.textBehind, { state = state.copy(textBehind = !state.textBehind) }, "Aa")
+                    ToolToggle("Odak vurgusu", state.focusPerson, { state = state.copy(focusPerson = !state.focusPerson) }, "◉")
+                    ToolToggle("Metin üstte", state.textBehind, { state = state.copy(textBehind = !state.textBehind) }, "Aa")
                     ToolToggle("Güvenli alan", state.showSafeArea, { state = state.copy(showSafeArea = !state.showSafeArea) }, "▣")
                 }
                 Spacer(Modifier.height(18.dp))
