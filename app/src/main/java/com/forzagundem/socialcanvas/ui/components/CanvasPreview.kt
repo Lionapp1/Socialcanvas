@@ -59,7 +59,7 @@ fun CanvasPreview(
         Box(
             Modifier.width(previewWidth).height(previewHeight).clip(RoundedCornerShape(20.dp))
                 .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xFF252C3D), Color(0xFF080A10))))
+                .background(Brush.verticalGradient(listOf(Color(0xFF191919), Color(0xFF080808))))
         ) {
             if (state.imageUri != null) {
                 AsyncImage(
@@ -85,7 +85,7 @@ fun CanvasPreview(
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Box(
                         Modifier.fillMaxWidth(0.52f).aspectRatio(0.72f).clip(RoundedCornerShape(18.dp))
-                            .background(Brush.verticalGradient(listOf(Color(0xFF59647D), Color(0xFF20283A))))
+                            .background(Brush.verticalGradient(listOf(Color(0xFF454545), Color(0xFF171717))))
                             .padding(12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -170,7 +170,7 @@ fun CanvasPreview(
                         drawLine(grid, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), 0.7.dp.toPx())
                         y += step
                     }
-                    drawRect(Color(0xFF55E6E0).copy(alpha = 0.72f), size = androidx.compose.ui.geometry.Size(size.width * 0.48f, 2.dp.toPx()))
+                    drawRect(Gold.copy(alpha = 0.78f), size = androidx.compose.ui.geometry.Size(size.width * 0.48f, 2.dp.toPx()))
                 }
             }
 
