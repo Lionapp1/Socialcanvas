@@ -65,5 +65,8 @@ data class EditorState(
     val textAlign: TextAlignMode = when (template) { TemplateType.TRANSFER, TemplateType.HABER -> TextAlignMode.RIGHT; else -> TextAlignMode.CENTER },
     val textX: Float = when (template) { TemplateType.TRANSFER, TemplateType.HABER -> 0.22f; else -> 0f },
     val textY: Float = when (template) { TemplateType.TRANSFER, TemplateType.HABER -> 0.02f; TemplateType.SKOR -> 0.18f; else -> 0.28f },
-    val textShadow: Boolean = true
+    val textShadow: Boolean = true,
+    val statOne: Float = 0.62f,
+    val statTwo: Float = 0.78f,
+    val statThree: Float = 0.44f
 )
