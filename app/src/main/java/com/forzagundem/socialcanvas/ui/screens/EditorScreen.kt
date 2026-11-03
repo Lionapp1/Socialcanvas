@@ -311,7 +311,16 @@ private fun EditorSlider(label: String, value: Float, range: ClosedFloatingPoint
     Column(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, color = TextSecondary, fontSize = 12.sp)
-            Text("${(value * 100).toInt()}%", color = Gold, fontSize = 11.sp)
+            Text(
+                when {
+                    label.contains("boyutu") -> "${value.toInt()} sp"
+                    label.contains("yakınlaştırma") -> "${(value * 100).toInt()}%"
+                    label.contains("karartma") -> "${(value * 100).toInt()}%"
+                    label.startsWith("Veri") -> "${(value * 100).toInt()}%"
+                    else -> "${(value * 100).toInt()}%"
+                },
+                color = Gold, fontSize = 11.sp
+            )
         }
         Slider(
             value = value.coerceIn(range.start, range.endInclusive),
