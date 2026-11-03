@@ -289,7 +289,6 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                 SectionLabel("Görünüm")
                 EditorSlider("Fotoğraf karartma", state.darken, 0f..0.85f) { state = state.copy(darken = it) }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    RatioChip("Güvenli alan", state.showSafeArea) { state = state.copy(showSafeArea = !state.showSafeArea) }
                     RatioChip("Metin gölgesi", state.textShadow) { state = state.copy(textShadow = !state.textShadow) }
                 }
 
@@ -312,7 +311,7 @@ private fun EditorSlider(label: String, value: Float, range: ClosedFloatingPoint
     Column(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, color = TextSecondary, fontSize = 12.sp)
-            Text(String.format("%.2f", value), color = Gold, fontSize = 11.sp)
+            Text("${(value * 100).toInt()}%", color = Gold, fontSize = 11.sp)
         }
         Slider(
             value = value.coerceIn(range.start, range.endInclusive),
