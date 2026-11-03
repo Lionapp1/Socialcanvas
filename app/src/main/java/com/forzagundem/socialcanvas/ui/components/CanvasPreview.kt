@@ -194,6 +194,19 @@ fun CanvasPreview(
                 SubjectLayer(state, onStateChange)
             }
 
+            if (state.template == com.forzagundem.socialcanvas.data.TemplateType.ISTATISTIK) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val left = size.width * 0.12f
+                    val right = size.width * 0.88f
+                    val top = size.height * 0.70f
+                    listOf(state.statOne, state.statTwo, state.statThree).forEachIndexed { index, fraction ->
+                        val y = top + index * 14.dp.toPx()
+                        drawLine(Color.White.copy(alpha = 0.18f), androidx.compose.ui.geometry.Offset(left, y), androidx.compose.ui.geometry.Offset(right, y), 6.dp.toPx(), androidx.compose.ui.graphics.StrokeCap.Round)
+                        drawLine(Gold, androidx.compose.ui.geometry.Offset(left, y), androidx.compose.ui.geometry.Offset(left + (right - left) * fraction, y), 6.dp.toPx(), androidx.compose.ui.graphics.StrokeCap.Round)
+                    }
+                }
+            }
+
     }
 }
 
