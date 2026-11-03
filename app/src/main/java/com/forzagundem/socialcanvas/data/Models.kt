@@ -47,7 +47,7 @@ data class EditorState(
     val headline: String = TemplateType.TRANSFER.defaultHeadline,
     val subtitle: String = TemplateType.TRANSFER.defaultSub,
     val darken: Float = when (template) { TemplateType.TRANSFER, TemplateType.HABER -> 0.58f; TemplateType.SKOR -> 0.42f; TemplateType.ALINTI -> 0.30f; else -> 0.40f },
-    val showSafeArea: Boolean = true,
+    val showSafeArea: Boolean = false,
     val imageUri: String? = null,
     val subjectUri: String? = null,
     val subjectX: Float = 0.20f,
