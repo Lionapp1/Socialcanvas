@@ -195,65 +195,7 @@ fun CanvasPreview(
             }
 
             if (state.template == com.forzagundem.socialcanvas.data.TemplateType.ISTATISTIK) {
-                Canvas(Modifier.fillMaxSize()) {
-                    val left = size.width * 0.12f
-                    val right = size.width * 0.88f
-                    val top = size.height * 0.70f
-                    listOf(state.statOne, state.statTwo, state.statThree).forEachIndexed { index, fraction ->
-                        val y = top + index * 14.dp.toPx()
-                        drawLine(Color.White.copy(alpha = 0.18f), androidx.compose.ui.geometry.Offset(left, y), androidx.compose.ui.geometry.Offset(right, y), 6.dp.toPx(), androidx.compose.ui.graphics.StrokeCap.Round)
-                        drawLine(Gold, androidx.compose.ui.geometry.Offset(left, y), androidx.compose.ui.geometry.Offset(left + (right - left) * fraction, y), 6.dp.toPx(), androidx.compose.ui.graphics.StrokeCap.Round)
-                    }
-                }
-            }
-
-            if (state.template == com.forzagundem.socialcanvas.data.TemplateType.TRANSFER || state.template == com.forzagundem.socialcanvas.data.TemplateType.HABER) {
-                Canvas(Modifier.fillMaxSize()) {
-                    val step = 34.dp.toPx()
-                    val grid = Color.White.copy(alpha = 0.055f)
-                    var x = 0f
-                    while (x <= size.width) {
-                        drawLine(grid, androidx.compose.ui.geometry.Offset(x, 0f), androidx.compose.ui.geometry.Offset(x, size.height), 0.7.dp.toPx())
-                        x += step
-                    }
-                    var y = 0f
-                    while (y <= size.height) {
-                        drawLine(grid, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), 0.7.dp.toPx())
-                        y += step
-                    }
-                    drawRect(Gold.copy(alpha = 0.78f), size = androidx.compose.ui.geometry.Size(size.width * 0.48f, 2.dp.toPx()))
-                }
-            }
-
-            Canvas(Modifier.fillMaxSize()) {
-                val pad = 18.dp.toPx()
-                when (state.template) {
-                    com.forzagundem.socialcanvas.data.TemplateType.TRANSFER,
-                    com.forzagundem.socialcanvas.data.TemplateType.HABER -> {
-                        drawLine(Gold.copy(alpha = 0.92f), androidx.compose.ui.geometry.Offset(pad, pad), androidx.compose.ui.geometry.Offset(size.width * 0.34f, pad), 3.dp.toPx())
-                        drawLine(Gold.copy(alpha = 0.72f), androidx.compose.ui.geometry.Offset(pad, pad), androidx.compose.ui.geometry.Offset(pad, size.height * 0.30f), 3.dp.toPx())
-                    }
-                    com.forzagundem.socialcanvas.data.TemplateType.ALINTI -> {
-                        val inset = 26.dp.toPx()
-                        drawLine(Gold.copy(alpha = 0.72f), androidx.compose.ui.geometry.Offset(inset, size.height * 0.13f), androidx.compose.ui.geometry.Offset(size.width - inset, size.height * 0.13f), 1.dp.toPx())
-                        drawLine(Gold.copy(alpha = 0.72f), androidx.compose.ui.geometry.Offset(inset, size.height * 0.86f), androidx.compose.ui.geometry.Offset(size.width - inset, size.height * 0.86f), 1.dp.toPx())
-                    }
-                    else -> Unit
-                }
-            }
-
-            if (state.showSafeArea) {
-                Box(Modifier.fillMaxSize().padding(10.dp).border(1.dp, Gold.copy(alpha = 0.28f), RoundedCornerShape(14.dp)))
-            }
-            Text(
-                state.ratio.label,
-                Modifier.align(Alignment.TopEnd).padding(10.dp)
-                    .background(Color.Black.copy(alpha = 0.62f), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                color = TextSecondary,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium
-            )
+    
         }
     }
 }
