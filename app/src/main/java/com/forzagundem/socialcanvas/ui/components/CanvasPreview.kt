@@ -194,9 +194,6 @@ fun CanvasPreview(
                 SubjectLayer(state, onStateChange)
             }
 
-            if (state.template == com.forzagundem.socialcanvas.data.TemplateType.ISTATISTIK) {
-    
-        }
     }
 }
 
