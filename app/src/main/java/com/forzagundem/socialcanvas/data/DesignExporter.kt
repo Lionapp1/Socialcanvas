@@ -90,20 +90,6 @@ object DesignExporter {
                 canvas.drawLine(left, y, left + (right - left) * fraction, y, bar)
             }
         }
-        if (state.template == TemplateType.TRANSFER || state.template == TemplateType.HABER) {
-            val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.argb(14, 255, 255, 255)
-                strokeWidth = 1.5f
-            }
-            val step = 108f
-            var gx = 0f
-            while (gx <= width) { canvas.drawLine(gx, 0f, gx, height.toFloat(), gridPaint); gx += step }
-            var gy = 0f
-            while (gy <= height) { canvas.drawLine(0f, gy, width.toFloat(), gy, gridPaint); gy += step }
-            gridPaint.color = Color.rgb(255, 183, 0)
-            gridPaint.alpha = 185
-            canvas.drawRect(0f, 0f, width * 0.48f, 5f, gridPaint)
-        }
 
         fun drawSubject() {
             state.subjectUri?.let { raw ->
@@ -161,35 +147,6 @@ object DesignExporter {
         paint.clearShadowLayer()
 
         if (state.subjectOnTop) drawSubject()
-
-        when (state.template) {
-            TemplateType.TRANSFER, TemplateType.HABER -> {
-                val accent = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = Color.argb(235, 255, 183, 0)
-                    strokeWidth = 7f
-                    style = Paint.Style.STROKE
-                }
-                canvas.drawLine(54f, 54f, width * 0.34f, 54f, accent)
-                canvas.drawLine(54f, 54f, 54f, height * 0.30f, accent)
-            }
-            TemplateType.ALINTI -> {
-                val accent = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = Color.argb(185, 255, 183, 0)
-                    strokeWidth = 3f
-                }
-                canvas.drawLine(78f, height * 0.13f, width - 78f, height * 0.13f, accent)
-                canvas.drawLine(78f, height * 0.86f, width - 78f, height * 0.86f, accent)
-            }
-            else -> Unit
-        }
-
-        if (state.showSafeArea) {
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = 3f
-            paint.color = Color.argb(100, 255, 183, 0)
-            canvas.drawRoundRect(RectF(28f, 28f, width - 28f, height - 28f), 28f, 28f, paint)
-            paint.style = Paint.Style.FILL
-        }
 
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "SocialCanvas_${System.currentTimeMillis()}.png")
