@@ -209,6 +209,7 @@ fun CanvasPreview(
 
     }
 }
+}
 
 @Composable
 private fun SubjectLayer(state: EditorState, onStateChange: (EditorState) -> Unit) {
