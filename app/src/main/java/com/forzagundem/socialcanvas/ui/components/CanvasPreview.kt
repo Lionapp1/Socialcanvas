@@ -186,8 +186,7 @@ fun CanvasPreview(
                 SubjectLayer(state, onStateChange)
             }
 
-            if (true) {
-                val light = state.imageUri == null && (state.template == TemplateType.ISTATISTIK || state.template == TemplateType.ALINTI)
+            val light = state.imageUri == null && (state.template == TemplateType.ISTATISTIK || state.template == TemplateType.ALINTI)
                 val ink = if (light) Color(0xFF8F1538) else Color(0xFFFFC52E)
                 val category = when (state.template) {
                     TemplateType.TRANSFER -> "TRANSFER MERKEZİ"
@@ -217,13 +216,12 @@ fun CanvasPreview(
                     Icon(mark, contentDescription = category, tint = ink, modifier = Modifier.width(27.dp).height(27.dp))
                     Text(category, color = ink, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 }
-                Text(
-                    "1905  •  FORZA GÜNDEM",
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
-                    color = if (light) Color(0xFF8F1538).copy(alpha = .72f) else Color.White.copy(alpha = .72f),
-                    fontSize = 8.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp
-                )
-            }
+            Text(
+                "1905  •  FORZA GÜNDEM",
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
+                color = if (light) Color(0xFF8F1538).copy(alpha = .72f) else Color.White.copy(alpha = .72f),
+                fontSize = 8.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp
+            )
 
             val textWidth = when (state.template) {
                 com.forzagundem.socialcanvas.data.TemplateType.TRANSFER,
