@@ -1,6 +1,8 @@
 package com.forzagundem.socialcanvas.ui.screens
 
 import android.content.Intent
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,6 +28,8 @@ import androidx.compose.material.icons.outlined.SportsSoccer
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -214,13 +218,19 @@ fun HomeScreen() {
 @Composable
 private fun ReaderScreen(article: ForzaArticle, saved: Boolean, onBack: () -> Unit, onSave: () -> Unit) {
     val context = LocalContext.current
+    var showSourcePage by remember(article.link) { mutableStateOf(false) }
+    var pageLoading by remember(article.link) { mutableStateOf(false) }
+    BackHandler(enabled = showSourcePage) { showSourcePage = false }
+
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) { Icon(Icons.Outlined.ArrowBack, contentDescription = "Geri", tint = TextPrimary) }
-            Text("HABER DETAYI", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.weight(1f))
+            IconButton(onClick = { if (showSourcePage) showSourcePage = false else onBack() }) {
+                Icon(Icons.Outlined.ArrowBack, contentDescription = "Geri", tint = TextPrimary)
+            }
+            Text(if (showSourcePage) article.source.uppercase(Locale("tr")) else "HABER DETAYI", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             IconButton(onClick = onSave) {
                 Icon(if (saved) Icons.Outlined.Bookmark else Icons.Outlined.BookmarkBorder, contentDescription = if (saved) "Kaydedildi" else "Haberi kaydet", tint = if (saved) Gold else TextPrimary)
             }
@@ -228,47 +238,73 @@ private fun ReaderScreen(article: ForzaArticle, saved: Boolean, onBack: () -> Un
                 val send = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, "${article.title}\n${article.link}") }
                 context.startActivity(Intent.createChooser(send, "Haberi paylaş"))
             }) { Icon(Icons.Outlined.Share, contentDescription = "Paylaş", tint = TextPrimary) }
+            IconButton(onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(article.link))) } }) {
+                Icon(Icons.Outlined.OpenInNew, contentDescription = "Tarayıcıda aç", tint = TextPrimary)
+            }
         }
-        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 24.dp)) {
-            item {
-                if (!article.imageUrl.isNullOrBlank()) {
-                    AsyncImage(model = article.imageUrl, contentDescription = article.title, modifier = Modifier.fillMaxWidth().height(235.dp), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
-                } else {
-                    Box(Modifier.fillMaxWidth().height(170.dp).background(Brush.linearGradient(listOf(Color(0xFF451321), Color(0xFF141923)))), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Outlined.SportsSoccer, null, tint = Color.White.copy(alpha = .55f), modifier = Modifier.size(54.dp))
-                    }
-                }
-                Column(Modifier.padding(horizontal = 22.dp, vertical = 22.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.clip(CircleShape).background(Color(0x33E11D36)).padding(horizontal = 10.dp, vertical = 6.dp)) {
-                            Text(article.source.uppercase(Locale("tr")), color = Color(0xFFFF7786), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        if (showSourcePage) {
+            if (pageLoading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Gold, trackColor = Surface)
+            AndroidView(
+                modifier = Modifier.fillMaxSize().background(Color.White),
+                factory = { ctx ->
+                    WebView(ctx).apply {
+                        settings.javaScriptEnabled = true
+                        settings.domStorageEnabled = true
+                        settings.loadsImagesAutomatically = true
+                        settings.javaScriptCanOpenWindowsAutomatically = false
+                        webViewClient = object : WebViewClient() {
+                            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) { pageLoading = true }
+                            override fun onPageFinished(view: WebView?, url: String?) { pageLoading = false }
                         }
-                        Spacer(Modifier.width(10.dp))
-                        Text(timeLabel(article.publishedAt), color = TextMuted, fontSize = 11.sp)
+                        loadUrl(article.link)
                     }
-                    Spacer(Modifier.height(16.dp))
-                    Text(article.title, color = TextPrimary, fontSize = 27.sp, lineHeight = 34.sp, fontWeight = FontWeight.ExtraBold)
-                    Spacer(Modifier.height(18.dp))
-                    HorizontalDivider(color = Border)
-                    Spacer(Modifier.height(18.dp))
-                    Text("HABER ÖZETİ", color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 1.5.sp)
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        article.summary.ifBlank { "Bu yayıncı RSS akışında haberin ayrıntılı metni paylaşılmamış. Haberin tamamını orijinal kaynağından okuyabilirsin." },
-                        color = TextPrimary, fontSize = 17.sp, lineHeight = 29.sp
-                    )
-                    Spacer(Modifier.height(22.dp))
-                    Text("Bu içerik ${article.source} tarafından yayımlanmıştır. ForzaX haber başlığını ve mevcut kısa özeti kaynak göstererek sunar.", color = TextMuted, fontSize = 12.sp, lineHeight = 19.sp)
-                    Spacer(Modifier.height(18.dp))
-                    Button(
-                        onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(article.link))) } },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        shape = RoundedCornerShape(15.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE11D36), contentColor = Color.White)
-                    ) {
-                        Text("Kaynağın tamamını oku", fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.width(8.dp))
-                        Icon(Icons.Outlined.OpenInNew, null, modifier = Modifier.size(17.dp))
+                },
+                update = { view -> if (view.url == null) view.loadUrl(article.link) }
+            )
+        } else {
+            LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 24.dp)) {
+                item {
+                    if (!article.imageUrl.isNullOrBlank()) {
+                        AsyncImage(model = article.imageUrl, contentDescription = article.title, modifier = Modifier.fillMaxWidth().height(235.dp), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+                    } else {
+                        Box(Modifier.fillMaxWidth().height(170.dp).background(Brush.linearGradient(listOf(Color(0xFF451321), Color(0xFF141923)))), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Outlined.SportsSoccer, null, tint = Color.White.copy(alpha = .55f), modifier = Modifier.size(54.dp))
+                        }
+                    }
+                    Column(Modifier.padding(horizontal = 22.dp, vertical = 22.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.clip(CircleShape).background(Color(0x33E11D36)).padding(horizontal = 10.dp, vertical = 6.dp)) {
+                                Text(article.source.uppercase(Locale("tr")), color = Color(0xFFFF7786), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            Text(timeLabel(article.publishedAt), color = TextMuted, fontSize = 11.sp)
+                        }
+                        Spacer(Modifier.height(16.dp))
+                        Text(article.title, color = TextPrimary, fontSize = 27.sp, lineHeight = 34.sp, fontWeight = FontWeight.ExtraBold)
+                        Spacer(Modifier.height(18.dp))
+                        HorizontalDivider(color = Border)
+                        Spacer(Modifier.height(18.dp))
+                        Text("HABER ÖZETİ", color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 1.5.sp)
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            article.summary.ifBlank { "Bu yayıncı RSS akışında haberin ayrıntılı metni paylaşılmamış. Haberin tamamını orijinal kaynağından okuyabilirsin." },
+                            color = TextPrimary, fontSize = 17.sp, lineHeight = 29.sp
+                        )
+                        Spacer(Modifier.height(22.dp))
+                        Text("Bu içerik ${article.source} tarafından yayımlanmıştır. ForzaX haber başlığını ve mevcut kısa özeti kaynak göstererek sunar.", color = TextMuted, fontSize = 12.sp, lineHeight = 19.sp)
+                        Spacer(Modifier.height(18.dp))
+                        Button(
+                            onClick = { showSourcePage = true },
+                            modifier = Modifier.fillMaxWidth().height(52.dp),
+                            shape = RoundedCornerShape(15.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE11D36), contentColor = Color.White)
+                        ) {
+                            Text("Haberi uygulama içinde oku", fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.width(8.dp))
+                            Icon(Icons.Outlined.ChevronRight, null, modifier = Modifier.size(17.dp))
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text("Tam metin yayıncının kendi sayfasından yüklenir. Bazı siteler uygulama içi görüntülemeyi kısıtlayabilir.", color = TextMuted, fontSize = 11.sp, lineHeight = 16.sp)
                     }
                 }
             }
