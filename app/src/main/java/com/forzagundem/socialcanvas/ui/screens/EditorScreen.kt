@@ -231,6 +231,14 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                 )
                 Spacer(Modifier.height(18.dp))
                 SectionLabel("Platform önizlemesi")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    RatioChip("Instagram akışı", state.ratio != AspectRatio.THREADS_45 && state.ratio != AspectRatio.STORY) {
+                        state = state.copy(ratio = AspectRatio.INSTAGRAM_45)
+                    }
+                    RatioChip("Threads", state.ratio == AspectRatio.THREADS_45) {
+                        state = state.copy(ratio = AspectRatio.THREADS_45)
+                    }
+                }
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AspectRatio.entries.forEach { ratio ->
                         RatioChip(ratio.label, state.ratio == ratio) { state = state.copy(ratio = ratio) }
