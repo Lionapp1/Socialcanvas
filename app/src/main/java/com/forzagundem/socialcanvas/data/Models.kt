@@ -80,42 +80,53 @@ data class EditorState(
  * selected photo, and canvas ratio. This is the one-tap professional layout reset.
  */
 fun EditorState.applyProfessionalLayout(): EditorState = when (template) {
-    TemplateType.TRANSFER, TemplateType.HABER -> copy(
-        darken = 0.62f, subjectX = 0.24f, subjectY = 0.02f, subjectScale = 1.12f,
-        subjectOnTop = true, headlineSize = if (template == TemplateType.TRANSFER) 34f else 31f,
-        subtitleSize = 13f, font = CanvasFont.CONDENSED, textAlign = TextAlignMode.LEFT,
-        textX = -0.28f, textY = 0.10f, headlineColor = 0xFFFFFFFF,
-        subtitleColor = 0xFFE8E8E8, textShadow = true
+    TemplateType.TRANSFER -> copy(
+        designStyle = DesignStyle.DARK_CINEMATIC, darken = 0.52f,
+        subjectX = 0.24f, subjectY = 0.02f, subjectScale = 1.12f, subjectOnTop = true,
+        headlineSize = 34f, subtitleSize = 13f, font = CanvasFont.CONDENSED,
+        textAlign = TextAlignMode.LEFT, textX = -0.25f, textY = 0.10f,
+        headlineColor = 0xFFFFFFFF, subtitleColor = 0xFFFFD36A, textShadow = true
+    )
+    TemplateType.HABER -> copy(
+        designStyle = DesignStyle.DARK_CINEMATIC, darken = 0.58f,
+        subjectX = 0.18f, subjectY = 0.02f, subjectScale = 1.08f, subjectOnTop = true,
+        headlineSize = 31f, subtitleSize = 14f, font = CanvasFont.BOLD,
+        textAlign = TextAlignMode.LEFT, textX = -0.25f, textY = 0.12f,
+        headlineColor = 0xFFFFFFFF, subtitleColor = 0xFFFFC52E, textShadow = true
     )
     TemplateType.SKOR -> copy(
-        darken = 0.46f, subjectX = 0.20f, subjectY = 0.08f, subjectScale = 1.08f,
-        subjectOnTop = true, headlineSize = 58f, subtitleSize = 15f,
-        font = CanvasFont.BOLD, textAlign = TextAlignMode.CENTER, textX = 0f, textY = 0.18f,
-        headlineColor = 0xFFFFFFFF, subtitleColor = 0xFFFFB700, textShadow = true
+        designStyle = DesignStyle.DARK_CINEMATIC, darken = 0.34f,
+        subjectX = 0.20f, subjectY = 0.08f, subjectScale = 1.08f, subjectOnTop = true,
+        headlineSize = 58f, subtitleSize = 15f, font = CanvasFont.BOLD,
+        textAlign = TextAlignMode.CENTER, textX = 0f, textY = 0.18f,
+        headlineColor = 0xFFFFFFFF, subtitleColor = 0xFFFFC52E, textShadow = true
     )
     TemplateType.ALINTI -> copy(
-        darken = 0.34f, subjectX = 0.12f, subjectY = 0.04f, subjectScale = 1.04f,
-        subjectOnTop = false, headlineSize = 35f, subtitleSize = 16f,
-        font = CanvasFont.SERIF, textAlign = TextAlignMode.CENTER, textX = 0f, textY = 0.20f,
-        headlineColor = 0xFFFFFFFF, subtitleColor = 0xFFFFC94A, textShadow = true
+        designStyle = DesignStyle.EDITORIAL_LIGHT, darken = 0f,
+        subjectX = 0.12f, subjectY = 0.04f, subjectScale = 1.04f, subjectOnTop = false,
+        headlineSize = 35f, subtitleSize = 16f, font = CanvasFont.SERIF,
+        textAlign = TextAlignMode.CENTER, textX = 0f, textY = 0.18f,
+        headlineColor = 0xFF252329, subtitleColor = 0xFF8F1538, textShadow = false
     )
     TemplateType.THREADS -> copy(
-        darken = 0.48f, subjectX = 0.18f, subjectY = 0.02f, subjectScale = 1.05f,
-        subjectOnTop = true, headlineSize = 32f, subtitleSize = 15f,
-        font = CanvasFont.MODERN, textAlign = TextAlignMode.LEFT, textX = -0.20f, textY = 0.12f,
+        designStyle = DesignStyle.DARK_CINEMATIC, darken = 0.38f,
+        subjectX = 0.18f, subjectY = 0.02f, subjectScale = 1.05f, subjectOnTop = true,
+        headlineSize = 32f, subtitleSize = 15f, font = CanvasFont.MODERN,
+        textAlign = TextAlignMode.LEFT, textX = -0.18f, textY = 0.12f,
         headlineColor = 0xFFFFFFFF, subtitleColor = 0xFFE7E7E7, textShadow = true
     )
     TemplateType.ISTATISTIK -> copy(
-        designStyle = DesignStyle.EDITORIAL_LIGHT,
-        darken = 0f, subjectX = 0.24f, subjectY = -0.02f, subjectScale = 1.08f,
-        subjectOnTop = true, headlineSize = 48f, subtitleSize = 14f,
-        font = CanvasFont.BOLD, textAlign = TextAlignMode.CENTER, textX = 0f, textY = -0.22f,
+        designStyle = DesignStyle.EDITORIAL_LIGHT, darken = 0f,
+        subjectX = 0.24f, subjectY = -0.02f, subjectScale = 1.08f, subjectOnTop = true,
+        headlineSize = 48f, subtitleSize = 14f, font = CanvasFont.BOLD,
+        textAlign = TextAlignMode.CENTER, textX = 0f, textY = -0.22f,
         headlineColor = 0xFF8F1538, subtitleColor = 0xFF242424, textShadow = false
     )
     TemplateType.BOS -> copy(
-        darken = 0.40f, subjectX = 0.18f, subjectY = 0.02f, subjectScale = 1f,
-        subjectOnTop = true, headlineSize = 36f, subtitleSize = 16f,
-        font = CanvasFont.MODERN, textAlign = TextAlignMode.CENTER, textX = 0f, textY = 0.18f,
-        textShadow = true
+        designStyle = DesignStyle.DARK_CINEMATIC, darken = 0.40f,
+        subjectX = 0.18f, subjectY = 0.02f, subjectScale = 1f, subjectOnTop = true,
+        headlineSize = 36f, subtitleSize = 16f, font = CanvasFont.MODERN,
+        textAlign = TextAlignMode.CENTER, textX = 0f, textY = 0.18f,
+        headlineColor = 0xFFFFFFFF, subtitleColor = 0xFFFFC52E, textShadow = true
     )
 }
