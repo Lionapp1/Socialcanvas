@@ -17,6 +17,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material.icons.filled.FormatQuote
+import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -189,8 +198,23 @@ fun CanvasPreview(
                     TemplateType.ISTATISTIK -> "GALATASARAY  •  İSTATİSTİK"
                     TemplateType.BOS -> "SOCIALCANVAS"
                 }
-                Column(Modifier.align(Alignment.TopCenter).padding(top = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(state.template.iconEmoji, fontSize = if (state.template == TemplateType.ISTATISTIK) 27.sp else 23.sp)
+                val mark = when (state.template) {
+                    TemplateType.TRANSFER -> Icons.Default.SwapHoriz
+                    TemplateType.HABER -> Icons.Default.Article
+                    TemplateType.SKOR -> Icons.Default.SportsSoccer
+                    TemplateType.ALINTI -> Icons.Default.FormatQuote
+                    TemplateType.THREADS -> Icons.Default.Forum
+                    TemplateType.ISTATISTIK -> Icons.Default.BarChart
+                    TemplateType.BOS -> Icons.Default.AutoAwesome
+                }
+                Column(
+                    Modifier.align(Alignment.TopCenter).padding(top = 18.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (state.imageUri != null) Color.Black.copy(alpha = .34f) else Color.Transparent)
+                        .padding(horizontal = 12.dp, vertical = 7.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(mark, contentDescription = category, tint = ink, modifier = Modifier.width(27.dp).height(27.dp))
                     Text(category, color = ink, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 }
                 Text(
