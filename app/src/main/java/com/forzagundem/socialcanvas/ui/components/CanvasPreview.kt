@@ -378,6 +378,29 @@ fun CanvasPreview(
             if (state.subjectUri != null && state.subjectOnTop) {
                 SubjectLayer(state, onStateChange)
             }
+            if (state.stickerUri != null) {
+                AsyncImage(
+                    model = state.stickerUri,
+                    contentDescription = "Manuel eklenen logo veya ikon",
+                    modifier = Modifier.align(Alignment.Center).width(previewWidth * .22f)
+                        .graphicsLayer {
+                            scaleX = state.stickerScale
+                            scaleY = state.stickerScale
+                            translationX = state.stickerX * size.width
+                            translationY = state.stickerY * size.height
+                        }
+                        .pointerInput(state.stickerUri) {
+                            detectDragGestures { change, drag ->
+                                change.consume()
+                                onStateChange(state.copy(
+                                    stickerX = (state.stickerX + drag.x / size.width).coerceIn(-1.2f, 1.2f),
+                                    stickerY = (state.stickerY + drag.y / size.height).coerceIn(-1.2f, 1.2f)
+                                ))
+                            }
+                        },
+                    contentScale = ContentScale.Fit
+                )
+            }
 
             if (state.template == com.forzagundem.socialcanvas.data.TemplateType.ISTATISTIK) {
                 Canvas(Modifier.fillMaxSize()) {
