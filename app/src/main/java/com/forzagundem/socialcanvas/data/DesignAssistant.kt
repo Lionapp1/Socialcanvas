@@ -37,12 +37,14 @@ object DesignAssistant {
         val sentences = firstLine.split(Regex("(?<=[.!?;])\\\\s+|\\\\s+[•|]\\\\s+"))
             .map { it.trim().trimEnd('.', ';') }.filter { it.isNotBlank() }
         val score = Regex("\\\\b([0-9]{1,2})\\\\s*[-:]\\\\s*([0-9]{1,2})\\\\b").find(source)
+        val scoreTail = if (score != null) firstLine.substring(score.range.last + 1).trim().trimStart(',', ':', ' ') else ""
+        val scoreTailParts = scoreTail.split(',').map { it.trim() }.filter { it.isNotBlank() }
         val title = when {
             score != null && template == TemplateType.SKOR -> {
                 val prefix = firstLine.substring(0, score.range.first).trim().trimEnd(',', ':')
-                val suffix = firstLine.substring(score.range.last + 1).trim().trimStart(',', ':', ' ')
+                val scoreSuffix = scoreTailParts.firstOrNull().orEmpty()
                 when {
-                    prefix.isNotBlank() && suffix.isNotBlank() -> "$prefix ${score.value} $suffix".take(92)
+                    prefix.isNotBlank() && scoreSuffix.isNotBlank() -> "$prefix ${score.value} $scoreSuffix".take(92)
                     prefix.isNotBlank() -> "$prefix ${score.value}".take(92)
                     else -> score.value
                 }
@@ -51,6 +53,7 @@ object DesignAssistant {
             else -> source.take(92)
         }
         val remainder = when {
+            score != null && template == TemplateType.SKOR && scoreTailParts.size > 1 -> scoreTailParts.drop(1).joinToString(", ")
             lines.size > 1 -> lines.drop(1).joinToString(" ")
             firstLine.length > title.length -> firstLine.removePrefix(title).trim().trimStart('-', '—', ':', '.', ',', ' ')
             sentences.size > 1 -> sentences.drop(1).joinToString(" ")
