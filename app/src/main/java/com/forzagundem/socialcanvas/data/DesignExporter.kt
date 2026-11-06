@@ -85,6 +85,25 @@ object DesignExporter {
             paint.shader = null
         }
 
+        if (state.imageUri == null) {
+            val lion = android.graphics.Path().apply {
+                moveTo(width * .50f, height * .20f)
+                cubicTo(width * .40f, height * .12f, width * .31f, height * .17f, width * .28f, height * .28f)
+                cubicTo(width * .19f, height * .24f, width * .16f, height * .34f, width * .23f, height * .43f)
+                cubicTo(width * .16f, height * .52f, width * .22f, height * .63f, width * .32f, height * .65f)
+                cubicTo(width * .35f, height * .77f, width * .44f, height * .82f, width * .50f, height * .84f)
+                cubicTo(width * .56f, height * .82f, width * .65f, height * .77f, width * .68f, height * .65f)
+                cubicTo(width * .78f, height * .63f, width * .84f, height * .52f, width * .77f, height * .43f)
+                cubicTo(width * .84f, height * .34f, width * .81f, height * .24f, width * .72f, height * .28f)
+                cubicTo(width * .69f, height * .17f, width * .60f, height * .12f, width * .50f, height * .20f)
+                close()
+            }
+            paint.style = Paint.Style.FILL
+            paint.color = if (editorial) Color.argb(14, 143, 21, 56) else Color.argb(19, 242, 181, 27)
+            canvas.drawPath(lion, paint)
+            canvas.drawOval(RectF(width * .37f, height * .31f, width * .63f, height * .65f), paint)
+        }
+
         state.imageUri?.let { raw ->
             decode(context, raw)?.let { source ->
                 val baseScale = max(width.toFloat() / source.width, height.toFloat() / source.height)
@@ -274,9 +293,10 @@ object DesignExporter {
             paint.textSize = 34f
             paint.color = ink
             canvas.drawText(category, cx, height * .105f, paint)
-            paint.textSize = 26f
-            paint.color = if (light) Color.rgb(143, 21, 56) else Color.argb(190, 255, 255, 255)
-            canvas.drawText("1905  •  FORZA GÜNDEM", cx, height * .965f, paint)
+            paint.typeface = Typeface.create("sans-serif", Typeface.BOLD_ITALIC)
+            paint.textSize = 30f
+            paint.color = if (light) Color.rgb(143, 21, 56) else Color.argb(220, 255, 255, 255)
+            canvas.drawText("forzagundem", cx, height * .965f, paint)
         }
 
         if (state.subjectOnTop) drawSubject()
