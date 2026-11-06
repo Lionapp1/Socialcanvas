@@ -12,8 +12,8 @@ android {
         applicationId = "com.forzagundem.socialcanvas"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 12
+        versionName = "1.5.0"
     }
 
     buildTypes {
@@ -21,7 +21,11 @@ android {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
-        debug { isMinifyEnabled = false }
+        debug {
+            isMinifyEnabled = false
+            applicationIdSuffix = ""
+            versionNameSuffix = ""
+        }
     }
 
     compileOptions {
