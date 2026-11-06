@@ -1,5 +1,7 @@
 package com.forzagundem.socialcanvas.data
 
+enum class DesignStyle { DARK_CINEMATIC, EDITORIAL_LIGHT }
+
 enum class AspectRatio(val label: String, val widthRatio: Float, val heightRatio: Float, val platform: String) {
     INSTAGRAM_45("Instagram gönderi 4:5", 4f, 5f, "Instagram akış gönderisi"),
     SQUARE("Kare 1:1", 1f, 1f, "Instagram / Threads kare"),
@@ -43,6 +45,7 @@ enum class TextAlignMode(val label: String) {
 
 data class EditorState(
     val template: TemplateType = TemplateType.TRANSFER,
+    val designStyle: DesignStyle = if (template == TemplateType.ISTATISTIK) DesignStyle.EDITORIAL_LIGHT else DesignStyle.DARK_CINEMATIC,
     val ratio: AspectRatio = AspectRatio.INSTAGRAM_45,
     val headline: String = TemplateType.TRANSFER.defaultHeadline,
     val subtitle: String = TemplateType.TRANSFER.defaultSub,
@@ -103,10 +106,11 @@ fun EditorState.applyProfessionalLayout(): EditorState = when (template) {
         headlineColor = 0xFFFFFFFF, subtitleColor = 0xFFE7E7E7, textShadow = true
     )
     TemplateType.ISTATISTIK -> copy(
-        darken = 0.56f, subjectX = 0.24f, subjectY = -0.02f, subjectScale = 1.08f,
+        designStyle = DesignStyle.EDITORIAL_LIGHT,
+        darken = 0f, subjectX = 0.24f, subjectY = -0.02f, subjectScale = 1.08f,
         subjectOnTop = true, headlineSize = 48f, subtitleSize = 14f,
-        font = CanvasFont.BOLD, textAlign = TextAlignMode.LEFT, textX = -0.22f, textY = -0.02f,
-        headlineColor = 0xFFFFFFFF, subtitleColor = 0xFFFFC12B, textShadow = true
+        font = CanvasFont.BOLD, textAlign = TextAlignMode.CENTER, textX = 0f, textY = -0.22f,
+        headlineColor = 0xFF8F1538, subtitleColor = 0xFF242424, textShadow = false
     )
     TemplateType.BOS -> copy(
         darken = 0.40f, subjectX = 0.18f, subjectY = 0.02f, subjectScale = 1f,
