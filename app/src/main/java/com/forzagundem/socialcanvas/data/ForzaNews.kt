@@ -28,6 +28,11 @@ object ForzaNewsRepository {
     private const val UPDATED = "updated_at"
     private val feeds = listOf(
         Feed("A Spor", "https://www.aspor.com.tr/rss/news.xml", "Gündem"),
+        Feed("A Spor · Galatasaray", "https://www.aspor.com.tr/rss/galatasaray.xml", "Galatasaray"),
+        Feed("A Spor · Süper Lig", "https://www.aspor.com.tr/rss/spor-toto-super-lig.xml", "Süper Lig"),
+        Feed("A Spor · Milli Takım", "https://www.aspor.com.tr/rss/millitakim.xml", "Milli Takım"),
+        Feed("A Spor · Şampiyonlar Ligi", "https://www.aspor.com.tr/rss/sampiyonlar-ligi.xml", "Avrupa"),
+        Feed("A Spor · Avrupa Ligi", "https://www.aspor.com.tr/rss/avrupa-ligi.xml", "Avrupa"),
         Feed("TRT Spor", "https://www.trthaber.com/spor_articles.rss", "Spor"),
         Feed("Habertürk", "https://www.haberturk.com/rss/spor.xml", "Spor"),
         Feed("Sky Sports", "https://www.skysports.com/rss/11095", "Dünya")
@@ -54,7 +59,7 @@ object ForzaNewsRepository {
             runCatching { collected += readFeed(feed) }
         }
         val merged = (collected + cached(context)).distinctBy { it.link }
-            .sortedByDescending { it.publishedAt }.take(150)
+            .sortedByDescending { publishedEpoch(it.publishedAt) }.take(250)
         if (merged.isNotEmpty()) {
             val json = JSONArray()
             merged.forEach { a ->
@@ -116,6 +121,14 @@ object ForzaNewsRepository {
                 result
             }
         } finally { connection.disconnect() }
+    }
+
+    private fun publishedEpoch(raw: String): Long {
+        if (raw.isBlank()) return 0L
+        val patterns = listOf("EEE, dd MMM yyyy HH:mm:ss Z", "yyyy-MM-dd'T'HH:mm:ssXXX", "yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd HH:mm:ss")
+        return patterns.firstNotNullOfOrNull { pattern ->
+            runCatching { java.text.SimpleDateFormat(pattern, Locale.US).parse(raw)?.time }.getOrNull()
+        } ?: 0L
     }
 
     private fun String.stripHtml(): String = replace(Regex("<[^>]*>"), " ").replace("&nbsp;", " ")
