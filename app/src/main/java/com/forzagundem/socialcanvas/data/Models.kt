@@ -81,7 +81,11 @@ data class EditorState(
     val showLineup: Boolean = false,
     val formation: String = "4-3-3",
     val lineupPlayers: String = "Kaleci\\nSağ Bek\\nStoper\\nStoper\\nSol Bek\\nÖn Libero\\nMerkez Orta Saha\\nMerkez Orta Saha\\nSağ Kanat\\nSantrfor\\nSol Kanat",
-    val logoScale: Float = 1f
+    val logoScale: Float = 1f,
+    val stickerUri: String? = null,
+    val stickerScale: Float = 1f,
+    val stickerX: Float = 0f,
+    val stickerY: Float = 0f
 )
 
 
