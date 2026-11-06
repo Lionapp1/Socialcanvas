@@ -186,8 +186,8 @@ fun CanvasPreview(
                 SubjectLayer(state, onStateChange)
             }
 
-            if (state.imageUri == null) {
-                val light = state.template == TemplateType.ISTATISTIK || state.template == TemplateType.ALINTI
+            {
+                val light = state.imageUri == null && (state.template == TemplateType.ISTATISTIK || state.template == TemplateType.ALINTI)
                 val ink = if (light) Color(0xFF8F1538) else Color(0xFFFFC52E)
                 val category = when (state.template) {
                     TemplateType.TRANSFER -> "TRANSFER MERKEZİ"
