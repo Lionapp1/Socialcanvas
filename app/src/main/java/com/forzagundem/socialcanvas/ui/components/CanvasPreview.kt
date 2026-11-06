@@ -62,7 +62,7 @@ fun CanvasPreview(
         Box(
             Modifier.width(previewWidth).height(previewHeight).clip(RoundedCornerShape(20.dp))
                 .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
-                .background(if (state.designStyle == DesignStyle.EDITORIAL_LIGHT && state.imageUri == null) Color(0xFFFAFAF8) else Brush.verticalGradient(listOf(Color(0xFF191919), Color(0xFF080808))))
+                .background(if (state.designStyle == DesignStyle.EDITORIAL_LIGHT && state.imageUri == null) Color(0xFFFAFAF8) else Color(0xFF111111))
         ) {
             if (state.imageUri != null) {
                 AsyncImage(
