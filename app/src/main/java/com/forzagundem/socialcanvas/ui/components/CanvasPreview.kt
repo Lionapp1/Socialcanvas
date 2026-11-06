@@ -214,36 +214,6 @@ fun CanvasPreview(
                 SubjectLayer(state, onStateChange)
             }
 
-            val light = state.imageUri == null && (state.template == TemplateType.ISTATISTIK || state.template == TemplateType.ALINTI)
-                val ink = if (light) Color(0xFF8F1538) else Color(0xFFFFC52E)
-                val category = when (state.template) {
-                    TemplateType.TRANSFER -> "TRANSFER MERKEZİ"
-                    TemplateType.HABER -> "SON GELİŞMELER"
-                    TemplateType.SKOR -> "MAÇ GÜNÜ"
-                    TemplateType.ALINTI -> "SÖZÜN ÖZÜ"
-                    TemplateType.THREADS -> "GÜNDEM"
-                    TemplateType.ISTATISTIK -> "GALATASARAY  •  İSTATİSTİK"
-                    TemplateType.BOS -> "SOCIALCANVAS"
-                }
-                val mark = when (state.template) {
-                    TemplateType.TRANSFER -> Icons.Default.SwapHoriz
-                    TemplateType.HABER -> Icons.Default.Article
-                    TemplateType.SKOR -> Icons.Default.SportsSoccer
-                    TemplateType.ALINTI -> Icons.Default.FormatQuote
-                    TemplateType.THREADS -> Icons.Default.Forum
-                    TemplateType.ISTATISTIK -> Icons.Default.BarChart
-                    TemplateType.BOS -> Icons.Default.AutoAwesome
-                }
-                Column(
-                    Modifier.align(Alignment.TopCenter).padding(top = 18.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(if (state.imageUri != null) Color.Black.copy(alpha = .34f) else Color.Transparent)
-                        .padding(horizontal = 12.dp, vertical = 7.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(mark, contentDescription = category, tint = ink, modifier = Modifier.width(27.dp).height(27.dp))
-                    Text(category, color = ink, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                }
             Text(
                 "forzagundem",
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
