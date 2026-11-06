@@ -203,12 +203,13 @@ object DesignExporter {
         }
         paint.clearShadowLayer()
 
-        if (state.imageUri == null) {
-            val light = editorial
+        run {
+            val light = state.imageUri == null && (state.template == TemplateType.ISTATISTIK || state.template == TemplateType.ALINTI)
+            val ink = if (light) Color.rgb(143, 21, 56) else Color.rgb(255, 197, 46)
             paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
             paint.textAlign = Paint.Align.CENTER
             paint.textSize = 34f
-            paint.color = if (light) Color.rgb(143, 21, 56) else Color.rgb(255, 197, 46)
+            paint.color = ink
             val category = when (state.template) {
                 TemplateType.TRANSFER -> "TRANSFER MERKEZİ"
                 TemplateType.HABER -> "SON GELİŞMELER"
@@ -218,10 +219,64 @@ object DesignExporter {
                 TemplateType.ISTATISTIK -> "GALATASARAY  •  İSTATİSTİK"
                 TemplateType.BOS -> "SOCIALCANVAS"
             }
-            canvas.drawText(category, width * .5f, height * .105f, paint)
+            val cx = width * .5f
+            val cy = height * .055f
+            val radius = min(width, height) * .025f
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = max(5f, width * .0022f)
+            paint.color = ink
+            canvas.drawCircle(cx, cy, radius, paint)
+            paint.style = Paint.Style.FILL
+            when (state.template) {
+                TemplateType.TRANSFER -> {
+                    paint.strokeWidth = max(5f, width * .0022f)
+                    paint.style = Paint.Style.STROKE
+                    canvas.drawLine(cx - radius * .55f, cy - radius * .28f, cx + radius * .48f, cy - radius * .28f, paint)
+                    canvas.drawLine(cx + radius * .48f, cy - radius * .28f, cx + radius * .20f, cy - radius * .52f, paint)
+                    canvas.drawLine(cx + radius * .48f, cy - radius * .28f, cx + radius * .20f, cy - radius * .04f, paint)
+                    canvas.drawLine(cx + radius * .55f, cy + radius * .30f, cx - radius * .48f, cy + radius * .30f, paint)
+                    canvas.drawLine(cx - radius * .48f, cy + radius * .30f, cx - radius * .20f, cy + radius * .06f, paint)
+                    canvas.drawLine(cx - radius * .48f, cy + radius * .30f, cx - radius * .20f, cy + radius * .54f, paint)
+                }
+                TemplateType.HABER -> {
+                    paint.style = Paint.Style.STROKE
+                    canvas.drawRect(cx - radius * .48f, cy - radius * .52f, cx + radius * .48f, cy + radius * .52f, paint)
+                    canvas.drawLine(cx - radius * .25f, cy - radius * .20f, cx + radius * .25f, cy - radius * .20f, paint)
+                    canvas.drawLine(cx - radius * .25f, cy + radius * .02f, cx + radius * .25f, cy + radius * .02f, paint)
+                    canvas.drawLine(cx - radius * .25f, cy + radius * .24f, cx + radius * .12f, cy + radius * .24f, paint)
+                }
+                TemplateType.SKOR -> {
+                    paint.style = Paint.Style.STROKE
+                    canvas.drawCircle(cx, cy, radius * .58f, paint)
+                    canvas.drawLine(cx - radius * .48f, cy - radius * .30f, cx + radius * .48f, cy + radius * .30f, paint)
+                    canvas.drawLine(cx + radius * .48f, cy - radius * .30f, cx - radius * .48f, cy + radius * .30f, paint)
+                }
+                TemplateType.ALINTI -> {
+                    paint.textSize = radius * 1.45f
+                    paint.textAlign = Paint.Align.CENTER
+                    canvas.drawText("“", cx, cy + radius * .52f, paint)
+                }
+                TemplateType.THREADS -> {
+                    paint.style = Paint.Style.STROKE
+                    canvas.drawRoundRect(RectF(cx - radius * .52f, cy - radius * .34f, cx + radius * .52f, cy + radius * .34f), radius * .15f, radius * .15f, paint)
+                    canvas.drawLine(cx - radius * .18f, cy + radius * .34f, cx - radius * .34f, cy + radius * .55f, paint)
+                }
+                TemplateType.ISTATISTIK -> {
+                    paint.style = Paint.Style.FILL
+                    canvas.drawRect(cx - radius * .48f, cy + radius * .08f, cx - radius * .22f, cy + radius * .48f, paint)
+                    canvas.drawRect(cx - radius * .10f, cy - radius * .18f, cx + radius * .16f, cy + radius * .48f, paint)
+                    canvas.drawRect(cx + radius * .28f, cy - radius * .48f, cx + radius * .52f, cy + radius * .48f, paint)
+                }
+                TemplateType.BOS -> canvas.drawCircle(cx, cy, radius * .25f, paint)
+            }
+            paint.style = Paint.Style.FILL
+            paint.textAlign = Paint.Align.CENTER
+            paint.textSize = 34f
+            paint.color = ink
+            canvas.drawText(category, cx, height * .105f, paint)
             paint.textSize = 26f
             paint.color = if (light) Color.rgb(143, 21, 56) else Color.argb(190, 255, 255, 255)
-            canvas.drawText("1905  •  FORZA GÜNDEM", width * .5f, height * .965f, paint)
+            canvas.drawText("1905  •  FORZA GÜNDEM", cx, height * .965f, paint)
         }
 
         if (state.subjectOnTop) drawSubject()
