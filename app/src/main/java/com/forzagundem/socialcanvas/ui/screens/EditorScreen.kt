@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.forzagundem.socialcanvas.data.AspectRatio
 import com.forzagundem.socialcanvas.data.CanvasFont
 import com.forzagundem.socialcanvas.data.DesignExporter
+import com.forzagundem.socialcanvas.data.DesignAssistant
 import com.forzagundem.socialcanvas.data.PersonCutoutProcessor
 import com.forzagundem.socialcanvas.data.EditorState
 import com.forzagundem.socialcanvas.data.applyProfessionalLayout
@@ -75,6 +76,8 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     var exporting by remember { mutableStateOf(false) }
     var cuttingOut by remember { mutableStateOf(false) }
+    var assistantText by remember { mutableStateOf("") }
+    var assistantNote by remember { mutableStateOf("Metnini yaz; asistan içeriğe uygun şablonu ve yerleşimi seçsin.") }
 
     fun keepUri(uri: android.net.Uri): String {
         runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
@@ -162,6 +165,36 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
+                SectionLabel("AI TASARIM ASİSTANI")
+                AppTextField(
+                    value = assistantText,
+                    onValueChange = { assistantText = it },
+                    label = "Metnini buraya yapıştır",
+                    singleLine = false
+                )
+                Text(
+                    assistantNote,
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    modifier = Modifier.padding(top = 6.dp, bottom = 10.dp)
+                )
+                GoldButton(
+                    "Metnimi analiz et ve tasarımı hazırla",
+                    {
+                        try {
+                            val plan = DesignAssistant.createPlan(assistantText, state)
+                            state = plan.state
+                            assistantNote = "${plan.templateName} şablonu seçildi. ${plan.explanation}"
+                            scope.launch { snackbar.showSnackbar("Asistan tasarımı hazırladı. Önizlemede kontrol edebilirsin.") }
+                        } catch (error: IllegalArgumentException) {
+                            assistantNote = error.message ?: "Metin okunamadı."
+                            scope.launch { snackbar.showSnackbar(assistantNote) }
+                        }
+                    },
+                    Modifier.fillMaxWidth(),
+                    enabled = assistantText.isNotBlank()
+                )
+                Spacer(Modifier.height(18.dp))
                 SectionLabel("Platform önizlemesi")
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AspectRatio.entries.forEach { ratio ->
