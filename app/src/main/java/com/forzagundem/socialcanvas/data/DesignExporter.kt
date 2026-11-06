@@ -372,6 +372,20 @@ object DesignExporter {
 
         if (state.subjectOnTop) drawSubject()
 
+        state.stickerUri?.let { raw ->
+            decode(context, raw)?.let { sticker ->
+                val fit = min(width.toFloat() / sticker.width, height.toFloat() / sticker.height)
+                val base = min(width, height) * .22f / max(sticker.width, sticker.height)
+                val scale = max(base, fit * .22f) * state.stickerScale.coerceIn(.15f, 2.5f)
+                val drawWidth = sticker.width * scale
+                val drawHeight = sticker.height * scale
+                val left = (width - drawWidth) / 2f + state.stickerX * width
+                val top = (height - drawHeight) / 2f + state.stickerY * height
+                canvas.drawBitmap(sticker, null, RectF(left, top, left + drawWidth, top + drawHeight), paint)
+                sticker.recycle()
+            }
+        }
+
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "SocialCanvas_${System.currentTimeMillis()}.png")
             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
