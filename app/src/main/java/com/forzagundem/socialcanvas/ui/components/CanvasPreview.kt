@@ -159,6 +159,26 @@ fun CanvasPreview(
                             drawCircle(red.copy(alpha = .14f), w * .38f, androidx.compose.ui.geometry.Offset(0f, h))
                         }
                     }
+                    // Subtle, original lion-head watermark: a brand texture, never a competing logo.
+                    val watermark = androidx.compose.ui.graphics.Path().apply {
+                        moveTo(w * .50f, h * .20f)
+                        cubicTo(w * .40f, h * .12f, w * .31f, h * .17f, w * .28f, h * .28f)
+                        cubicTo(w * .19f, h * .24f, w * .16f, h * .34f, w * .23f, h * .43f)
+                        cubicTo(w * .16f, h * .52f, w * .22f, h * .63f, w * .32f, h * .65f)
+                        cubicTo(w * .35f, h * .77f, w * .44f, h * .82f, w * .50f, h * .84f)
+                        cubicTo(w * .56f, h * .82f, w * .65f, h * .77f, w * .68f, h * .65f)
+                        cubicTo(w * .78f, h * .63f, w * .84f, h * .52f, w * .77f, h * .43f)
+                        cubicTo(w * .84f, h * .34f, w * .81f, h * .24f, w * .72f, h * .28f)
+                        cubicTo(w * .69f, h * .17f, w * .60f, h * .12f, w * .50f, h * .20f)
+                        close()
+                    }
+                    val watermarkColor = if (state.template == TemplateType.ALINTI || state.template == TemplateType.ISTATISTIK) red.copy(alpha = .055f) else gold.copy(alpha = .075f)
+                    drawPath(watermark, watermarkColor)
+                    drawOval(
+                        watermarkColor.copy(alpha = .75f),
+                        topLeft = androidx.compose.ui.geometry.Offset(w * .37f, h * .31f),
+                        size = androidx.compose.ui.geometry.Size(w * .26f, h * .34f)
+                    )
                 }
             }
             if (state.subjectUri != null) {
@@ -217,7 +237,7 @@ fun CanvasPreview(
                     Text(category, color = ink, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 }
             Text(
-                "1905  •  FORZA GÜNDEM",
+                "forzagundem",
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
                 color = if (light) Color(0xFF8F1538).copy(alpha = .72f) else Color.White.copy(alpha = .72f),
                 fontSize = 8.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp
