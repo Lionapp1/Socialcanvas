@@ -171,6 +171,71 @@ object DesignExporter {
             }
         }
 
+        if (state.showMatchScore && !state.showLineup) {
+            val card = RectF(width * .08f, height * .25f, width * .92f, height * .49f)
+            paint.color = Color.argb(178, 8, 10, 14)
+            canvas.drawRoundRect(card, 42f, 42f, paint)
+            val logoSize = min(width, height) * .105f * state.logoScale.coerceIn(.55f, 1.7f)
+            fun drawTeamLogo(raw: String?, cx: Float) {
+                if (raw.isNullOrBlank()) return
+                decode(context, raw)?.let { logo ->
+                    val dest = RectF(cx - logoSize / 2f, height * .285f, cx + logoSize / 2f, height * .285f + logoSize)
+                    canvas.drawBitmap(logo, null, dest, paint)
+                    logo.recycle()
+                }
+            }
+            drawTeamLogo(state.homeTeamLogoUri, width * .27f)
+            drawTeamLogo(state.awayTeamLogoUri, width * .73f)
+            paint.color = Color.WHITE
+            paint.textAlign = Paint.Align.CENTER
+            paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            paint.textSize = height * .047f
+            canvas.drawText(state.matchScore.take(18), width * .5f, height * .395f, paint)
+            paint.textSize = height * .018f
+            canvas.drawText(state.homeTeamName.take(22), width * .27f, height * .455f, paint)
+            canvas.drawText(state.awayTeamName.take(22), width * .73f, height * .455f, paint)
+        }
+
+        if (state.showLineup) {
+            val field = RectF(width * .07f, height * .18f, width * .93f, height * .87f)
+            paint.color = Color.rgb(16, 65, 43)
+            canvas.drawRoundRect(field, 34f, 34f, paint)
+            paint.color = Color.argb(210, 255, 255, 255)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 5f
+            canvas.drawRoundRect(field, 34f, 34f, paint)
+            canvas.drawLine(width * .07f, height * .525f, width * .93f, height * .525f, paint)
+            canvas.drawCircle(width * .5f, height * .525f, width * .13f, paint)
+            canvas.drawRect(width * .27f, height * .18f, width * .73f, height * .31f, paint)
+            canvas.drawRect(width * .27f, height * .74f, width * .73f, height * .87f, paint)
+            paint.style = Paint.Style.FILL
+            val formationLines = state.formation.split("-").mapNotNull { it.toIntOrNull() }
+            val playerNames = state.lineupPlayers.lines().map { it.trim() }.filter { it.isNotBlank() }.take(11)
+            val points = mutableListOf(0.88f to 0.50f)
+            var lineY = 0.72f
+            formationLines.forEach { count ->
+                repeat(count) { index -> points.add(lineY to ((index + 1f) / (count + 1f))) }
+                lineY -= 0.20f
+            }
+            val markerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(242, 181, 27) }
+            val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.WHITE; textSize = height * .014f; textAlign = Paint.Align.CENTER
+                typeface = Typeface.create("sans-serif", Typeface.BOLD)
+                setShadowLayer(4f, 0f, 2f, Color.BLACK)
+            }
+            points.take(11).forEachIndexed { index, point ->
+                val x = width * (field.left / width + point.second * .86f)
+                val y = height * (0.18f + point.first * .69f)
+                canvas.drawCircle(x, y, width * .019f, markerPaint)
+                playerNames.getOrNull(index)?.let { canvas.drawText(it.take(18), x, y + height * .026f, labelPaint) }
+            }
+            paint.color = Color.WHITE
+            paint.textAlign = Paint.Align.CENTER
+            paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            paint.textSize = height * .026f
+            canvas.drawText("${state.homeTeamName}  •  ${state.formation}", width * .5f, height * .145f, paint)
+        }
+
         fun drawSubject() {
             state.subjectUri?.let { raw ->
                 decode(context, raw)?.let { subject ->
@@ -217,13 +282,14 @@ object DesignExporter {
             TextAlignMode.CENTER -> textX
             TextAlignMode.RIGHT -> textX + textWidth / 2f
         }
-        drawWrapped(canvas, state.headline, anchorX, textY, paint, textWidth)
-
-        if (state.subtitle.isNotBlank()) {
-            paint.typeface = Typeface.create(family, Typeface.NORMAL)
-            paint.textSize = state.subtitleSize * 4.3f
-            paint.color = state.subtitleColor.toInt()
-            drawWrapped(canvas, state.subtitle, anchorX, textY + paint.textSize * 1.7f, paint, textWidth)
+        if (!state.showLineup) {
+            drawWrapped(canvas, state.headline, anchorX, textY, paint, textWidth)
+            if (state.subtitle.isNotBlank()) {
+                paint.typeface = Typeface.create(family, Typeface.NORMAL)
+                paint.textSize = state.subtitleSize * 4.3f
+                paint.color = state.subtitleColor.toInt()
+                drawWrapped(canvas, state.subtitle, anchorX, textY + paint.textSize * 1.7f, paint, textWidth)
+            }
         }
         paint.clearShadowLayer()
 
