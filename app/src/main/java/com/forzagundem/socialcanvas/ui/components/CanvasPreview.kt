@@ -179,6 +179,11 @@ fun CanvasPreview(
                         topLeft = androidx.compose.ui.geometry.Offset(w * .37f, h * .31f),
                         size = androidx.compose.ui.geometry.Size(w * .26f, h * .34f)
                     )
+                    val facialMark = watermarkColor.copy(alpha = .95f)
+                    drawCircle(facialMark, w * .009f, androidx.compose.ui.geometry.Offset(w * .435f, h * .455f))
+                    drawCircle(facialMark, w * .009f, androidx.compose.ui.geometry.Offset(w * .565f, h * .455f))
+                    drawLine(facialMark, androidx.compose.ui.geometry.Offset(w * .455f, h * .535f), androidx.compose.ui.geometry.Offset(w * .50f, h * .565f), w * .006f)
+                    drawLine(facialMark, androidx.compose.ui.geometry.Offset(w * .50f, h * .565f), androidx.compose.ui.geometry.Offset(w * .545f, h * .535f), w * .006f)
                 }
             }
             if (state.subjectUri != null) {
