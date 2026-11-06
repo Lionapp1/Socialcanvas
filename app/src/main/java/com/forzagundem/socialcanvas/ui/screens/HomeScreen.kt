@@ -229,6 +229,9 @@ private fun openArticle(context: android.content.Context, article: ForzaArticle)
     runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(article.link))) }
 }
 
+private fun timeLabel(timestamp: Long): String =
+    runCatching { SimpleDateFormat("HH:mm", Locale("tr")).format(java.util.Date(timestamp)) }.getOrDefault("Şimdi")
+
 private fun timeLabel(raw: String): String {
     if (raw.isBlank()) return "Yeni"
     return runCatching {
