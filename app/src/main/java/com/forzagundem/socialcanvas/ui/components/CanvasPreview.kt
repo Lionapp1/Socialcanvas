@@ -298,7 +298,7 @@ fun CanvasPreview(
                 com.forzagundem.socialcanvas.data.TemplateType.ALINTI -> 0.82f
                 else -> 0.90f
             }
-            if (!state.showLineup) Column(
+            if (!state.showLineup && !state.showMatchScore) Column(
                 Modifier.fillMaxWidth(textWidth).align(Alignment.Center)
                     .graphicsLayer {
                         translationX = state.textX * size.width
