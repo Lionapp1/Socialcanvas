@@ -90,6 +90,12 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
     val subjectPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) state = state.copy(subjectUri = keepUri(uri), subjectOnTop = true)
     }
+    val homeLogoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) state = state.copy(homeTeamLogoUri = keepUri(uri), showMatchScore = true)
+    }
+    val awayLogoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) state = state.copy(awayTeamLogoUri = keepUri(uri), showMatchScore = true)
+    }
 
     fun export(share: Boolean) {
         if (exporting) return
@@ -282,6 +288,49 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                     EditorSlider("Fotoğraf dikey konum", state.imageY, -0.5f..0.5f) { state = state.copy(imageY = it) }
                     DarkOutlinedButton("Fotoğrafı kaldır", { state = state.copy(imageUri = null, imageX = 0f, imageY = 0f, imageScale = 1f) }, Modifier.fillMaxWidth())
                 }
+
+                Spacer(Modifier.height(18.dp))
+                SectionLabel("MAÇ GRAFİĞİ · TAKIM LOGOLARI")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DarkOutlinedButton("Ev sahibi logosu", { homeLogoPicker.launch(arrayOf("image/*")) }, Modifier.weight(1f))
+                    DarkOutlinedButton("Deplasman logosu", { awayLogoPicker.launch(arrayOf("image/*")) }, Modifier.weight(1f))
+                }
+                AppTextField(state.homeTeamName, { state = state.copy(homeTeamName = it) }, "Ev sahibi takım", singleLine = true)
+                Spacer(Modifier.height(8.dp))
+                AppTextField(state.awayTeamName, { state = state.copy(awayTeamName = it) }, "Deplasman takımı", singleLine = true)
+                Spacer(Modifier.height(8.dp))
+                AppTextField(state.matchScore, { state = state.copy(matchScore = it, showMatchScore = true) }, "Skor (örn. 2 - 1)", singleLine = true)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    RatioChip("Skor kartını göster", state.showMatchScore) { state = state.copy(showMatchScore = !state.showMatchScore) }
+                    RatioChip("Logoları göster", state.homeTeamLogoUri != null || state.awayTeamLogoUri != null) {
+                        state = state.copy(showMatchScore = true)
+                    }
+                }
+                EditorSlider("Takım logosu boyutu", state.logoScale, 0.55f..1.7f) { state = state.copy(logoScale = it) }
+                if (state.homeTeamLogoUri != null || state.awayTeamLogoUri != null) {
+                    DarkOutlinedButton("Takım logolarını kaldır", {
+                        state = state.copy(homeTeamLogoUri = null, awayTeamLogoUri = null)
+                    }, Modifier.fillMaxWidth())
+                }
+
+                Spacer(Modifier.height(18.dp))
+                SectionLabel("İLK 11 · SAHA DİZİLİŞİ")
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("4-3-3", "4-2-3-1", "4-4-2", "3-5-2", "3-4-3", "5-3-2").forEach { formation ->
+                        RatioChip(formation, state.formation == formation) { state = state.copy(formation = formation, showLineup = true) }
+                    }
+                }
+                AppTextField(
+                    state.lineupPlayers,
+                    { state = state.copy(lineupPlayers = it) },
+                    "Oyuncu adları · kaleciden başlayarak 11 satır",
+                    singleLine = false
+                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    RatioChip("İlk 11 görselini göster", state.showLineup) { state = state.copy(showLineup = !state.showLineup) }
+                    RatioChip("Maç sonucu", state.showMatchScore) { state = state.copy(showMatchScore = !state.showMatchScore) }
+                }
+                Text("Diziliş seçimi saha yerleşimini belirler. Oyuncu sırası kaleci, savunma, orta saha ve hücum şeklindedir; gerçek kadroyu sen girersin.", color = TextSecondary, fontSize = 11.sp)
 
                 Spacer(Modifier.height(18.dp))
                 SectionLabel("Yapay zekâ kişi odağı")
