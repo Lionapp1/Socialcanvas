@@ -53,6 +53,9 @@ object DesignAssistant {
             TemplateType.THREADS -> AspectRatio.THREADS_45
             else -> AspectRatio.INSTAGRAM_45
         }
+        val percentages = Regex("(\\\\d{1,3})\\\\s*%").findAll(source)
+            .mapNotNull { it.groupValues.getOrNull(1)?.toFloatOrNull()?.div(100f) }
+            .map { it.coerceIn(0.02f, 1f) }.toList()
         val planned = EditorState(
             template = template,
             ratio = ratio,
@@ -65,8 +68,20 @@ object DesignAssistant {
             imageScale = current.imageScale,
             subjectX = current.subjectX,
             subjectY = current.subjectY,
-            subjectScale = current.subjectScale
-        ).applyProfessionalLayout()
+            subjectScale = current.subjectScale,
+            statOne = percentages.getOrNull(0) ?: current.statOne,
+            statTwo = percentages.getOrNull(1) ?: current.statTwo,
+            statThree = percentages.getOrNull(2) ?: current.statThree
+        ).applyProfessionalLayout().let { layout ->
+            val titleSize = when (template) {
+                TemplateType.ISTATISTIK -> when { title.length <= 14 -> 48f; title.length <= 30 -> 38f; else -> 29f }
+                TemplateType.SKOR -> if (title.length <= 8) 58f else 42f
+                TemplateType.ALINTI -> when { title.length <= 55 -> 35f; title.length <= 100 -> 29f; else -> 23f }
+                else -> when { title.length <= 34 -> layout.headlineSize; title.length <= 62 -> layout.headlineSize - 5f; else -> layout.headlineSize - 9f }
+            }
+            val subSize = when { subtitle.length > 150 -> 10f; subtitle.length > 90 -> 11f; subtitle.length > 45 -> 12f; else -> layout.subtitleSize }
+            layout.copy(headlineSize = titleSize, subtitleSize = subSize)
+        }
 
         val explanation = when (template) {
             TemplateType.TRANSFER -> "Transfer dili algılandı. Güçlü başlık, koyu fotoğraf ve futbol duyurusu düzeni seçildi."
