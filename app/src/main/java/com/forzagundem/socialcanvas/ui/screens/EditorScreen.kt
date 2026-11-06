@@ -153,11 +153,46 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
             // Both regions use weights. A vertically scrollable, unweighted sibling can
             // consume the available height and leave the preview with zero measured height.
             // Keeping the canvas in its own weighted viewport guarantees it stays visible.
-            CanvasPreview(
-                state = state,
-                modifier = Modifier.weight(0.56f).fillMaxWidth().padding(top = 6.dp, bottom = 8.dp)
+            Column(
+                Modifier.weight(0.56f).fillMaxWidth().padding(top = 4.dp, bottom = 4.dp)
             ) {
-                state = it
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        if (state.ratio == AspectRatio.THREADS_45) "Threads" else "Instagram",
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        when (state.ratio) {
+                            AspectRatio.STORY -> "Hikâye / Reels görünümü"
+                            AspectRatio.THREADS_45 -> "Gönderi görünümü"
+                            AspectRatio.LANDSCAPE -> "Yatay paylaşım görünümü"
+                            else -> "Akış gönderisi görünümü"
+                        },
+                        color = TextSecondary,
+                        fontSize = 10.sp
+                    )
+                }
+                CanvasPreview(
+                    state = state,
+                    modifier = Modifier.weight(1f).fillMaxWidth().padding(bottom = 2.dp)
+                ) {
+                    state = it
+                }
+                Text(
+                    if (state.ratio == AspectRatio.THREADS_45)
+                        "Threads gönderi oranı • Tasarım önizlemesi"
+                    else
+                        "Instagram paylaşım oranı • Tasarım önizlemesi",
+                    color = TextSecondary,
+                    fontSize = 10.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 2.dp)
+                )
             }
             Column(
                 Modifier.weight(0.44f).fillMaxWidth().background(Bg)
