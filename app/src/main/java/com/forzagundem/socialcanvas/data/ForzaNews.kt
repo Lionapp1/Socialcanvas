@@ -85,11 +85,13 @@ object ForzaNewsRepository {
             .sortedByDescending { publishedEpoch(it.publishedAt) }
             .take(250)
 
-        // Prefer previous fullContent when new RSS item is still short
         merged = merged.map { item ->
             val old = previous[item.link]
             if (old != null && old.fullContent.length > item.fullContent.length) {
-                item.copy(fullContent = old.fullContent, summary = if (item.summary.length < 80) old.summary else item.summary)
+                item.copy(
+                    fullContent = old.fullContent,
+                    summary = if (item.summary.length < 80) old.summary else item.summary
+                )
             } else item
         }
 
@@ -139,7 +141,9 @@ object ForzaNewsRepository {
                     val editorText = toEditorStyle(full)
                     article.copy(
                         fullContent = editorText,
-                        summary = editorText.take(280).let { if (editorText.length > 280) "$it…" else it }
+                        summary = editorText.take(280).let {
+                            if (editorText.length > 280) it + "…" else it
+                        }
                     )
                 } else article
             }
@@ -225,7 +229,7 @@ object ForzaNewsRepository {
         return if (cleaned.length > 2200) {
             val cut = cleaned.take(1800)
             val lastDot = cut.lastIndexOf('.')
-            if (lastDot > 1200) cut.take(lastDot + 1) else "$cut…"
+            if (lastDot > 1200) cut.take(lastDot + 1) else cut + "…"
         } else cleaned
     }
 
@@ -324,13 +328,16 @@ object ForzaNewsRepository {
         } ?: 0L
     }
 
-    private fun String.stripHtml(): String = replace(Regex("<[^>]*>"), " ")
-        .replace("&nbsp;", " ")
-        .replace("&", "&")
-        .replace(""", "\"")
-        .replace("&#39;", "'")
-        .replace("<", "<")
-        .replace(">", ">")
-        .replace(Regex("\\s+"), " ")
-        .trim()
+    private fun String.stripHtml(): String {
+        return this
+            .replace(Regex("<[^>]*>"), " ")
+            .replace("&nbsp;", " ")
+            .replace("&", "&")
+            .replace(""", "\"")
+            .replace("&#39;", "'")
+            .replace("<", "<")
+            .replace(">", ">")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+    }
 }
