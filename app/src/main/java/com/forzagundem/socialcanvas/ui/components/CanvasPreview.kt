@@ -38,6 +38,7 @@ import coil.compose.AsyncImage
 import com.forzagundem.socialcanvas.data.AspectRatio
 import com.forzagundem.socialcanvas.data.CanvasFont
 import com.forzagundem.socialcanvas.data.EditorState
+import com.forzagundem.socialcanvas.data.DesignStyle
 import com.forzagundem.socialcanvas.data.TextAlignMode
 import com.forzagundem.socialcanvas.ui.theme.Gold
 import com.forzagundem.socialcanvas.ui.theme.TextPrimary
@@ -61,7 +62,7 @@ fun CanvasPreview(
         Box(
             Modifier.width(previewWidth).height(previewHeight).clip(RoundedCornerShape(20.dp))
                 .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xFF191919), Color(0xFF080808))))
+                .background(if (state.designStyle == DesignStyle.EDITORIAL_LIGHT && state.imageUri == null) Color(0xFFFAFAF8) else Brush.verticalGradient(listOf(Color(0xFF191919), Color(0xFF080808))))
         ) {
             if (state.imageUri != null) {
                 AsyncImage(
@@ -100,16 +101,25 @@ fun CanvasPreview(
                 }
             }
 
-            // Cinematic grade: dark upper/lower zones keep the typography readable.
-            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
-            Box(Modifier.fillMaxSize().background(
-                Brush.verticalGradient(
-                    0f to Color.Black.copy(alpha = 0.28f),
-                    0.42f to Color.Transparent,
-                    0.72f to Color.Black.copy(alpha = 0.10f),
-                    1f to Color.Black.copy(alpha = 0.62f)
-                )
-            ))
+            // Editorial infographic canvas: restrained club-colour geometry replaces the empty background.
+            if (state.designStyle == DesignStyle.EDITORIAL_LIGHT && state.imageUri == null) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val red = Color(0xFF8F1538)
+                    val gold = Color(0xFFF2B51B)
+                    drawCircle(gold.copy(alpha = 0.14f), size.minDimension * 0.20f, androidx.compose.ui.geometry.Offset(size.width * 0.92f, size.height * 0.08f))
+                    drawCircle(red.copy(alpha = 0.08f), size.minDimension * 0.13f, androidx.compose.ui.geometry.Offset(size.width * 0.06f, size.height * 0.90f))
+                    drawLine(red.copy(alpha = 0.38f), androidx.compose.ui.geometry.Offset(size.width * 0.08f, size.height * 0.12f), androidx.compose.ui.geometry.Offset(size.width * 0.34f, size.height * 0.12f), 2.dp.toPx())
+                    drawLine(gold, androidx.compose.ui.geometry.Offset(size.width * 0.66f, size.height * 0.12f), androidx.compose.ui.geometry.Offset(size.width * 0.92f, size.height * 0.12f), 3.dp.toPx())
+                    drawLine(Color(0xFFDDDDDD), androidx.compose.ui.geometry.Offset(size.width * 0.08f, size.height * 0.88f), androidx.compose.ui.geometry.Offset(size.width * 0.92f, size.height * 0.88f), 1.dp.toPx())
+                }
+            } else {
+                // Cinematic grade is reserved for photo-led templates.
+                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
+                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
+                    0f to Color.Black.copy(alpha = 0.28f), 0.42f to Color.Transparent,
+                    0.72f to Color.Black.copy(alpha = 0.10f), 1f to Color.Black.copy(alpha = 0.62f)
+                )))
+            }
             if (state.subjectUri != null) {
                 val focusX = with(density) { previewWidth.toPx() } * (0.5f + state.subjectX)
                 val focusY = with(density) { previewHeight.toPx() } * (0.50f + state.subjectY)
@@ -135,11 +145,18 @@ fun CanvasPreview(
                 SubjectLayer(state, onStateChange)
             }
 
+            if (state.designStyle == DesignStyle.EDITORIAL_LIGHT && state.imageUri == null) {
+                Column(Modifier.align(Alignment.TopCenter).padding(top = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("⚽", fontSize = 27.sp)
+                    Text("GALATASARAY  •  İSTATİSTİK", color = Color(0xFF8F1538), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                }
+            }
+
             val textWidth = when (state.template) {
                 com.forzagundem.socialcanvas.data.TemplateType.TRANSFER,
                 com.forzagundem.socialcanvas.data.TemplateType.HABER,
                 com.forzagundem.socialcanvas.data.TemplateType.THREADS,
-                com.forzagundem.socialcanvas.data.TemplateType.ISTATISTIK -> 0.48f
+                com.forzagundem.socialcanvas.data.TemplateType.ISTATISTIK -> if (state.designStyle == DesignStyle.EDITORIAL_LIGHT) 0.84f else 0.48f
                 com.forzagundem.socialcanvas.data.TemplateType.ALINTI -> 0.82f
                 else -> 0.90f
             }
@@ -198,11 +215,13 @@ fun CanvasPreview(
                 Canvas(Modifier.fillMaxSize()) {
                     val left = size.width * 0.12f
                     val right = size.width * 0.88f
-                    val top = size.height * 0.70f
+                    val top = size.height * if (state.designStyle == DesignStyle.EDITORIAL_LIGHT) 0.72f else 0.70f
                     listOf(state.statOne, state.statTwo, state.statThree).forEachIndexed { index, fraction ->
                         val y = top + index * 14.dp.toPx()
-                        drawLine(Color.White.copy(alpha = 0.18f), androidx.compose.ui.geometry.Offset(left, y), androidx.compose.ui.geometry.Offset(right, y), 6.dp.toPx(), androidx.compose.ui.graphics.StrokeCap.Round)
-                        drawLine(Gold, androidx.compose.ui.geometry.Offset(left, y), androidx.compose.ui.geometry.Offset(left + (right - left) * fraction, y), 6.dp.toPx(), androidx.compose.ui.graphics.StrokeCap.Round)
+                        val trackColor = if (state.designStyle == DesignStyle.EDITORIAL_LIGHT) Color(0xFFE3E3E3) else Color.White.copy(alpha = 0.18f)
+                        val barColor = if (index % 2 == 0) Color(0xFF8F1538) else Color(0xFFF2B51B)
+                        drawLine(trackColor, androidx.compose.ui.geometry.Offset(left, y), androidx.compose.ui.geometry.Offset(right, y), 6.dp.toPx(), androidx.compose.ui.graphics.StrokeCap.Round)
+                        drawLine(barColor, androidx.compose.ui.geometry.Offset(left, y), androidx.compose.ui.geometry.Offset(left + (right - left) * fraction, y), 6.dp.toPx(), androidx.compose.ui.graphics.StrokeCap.Round)
                     }
                 }
             }
