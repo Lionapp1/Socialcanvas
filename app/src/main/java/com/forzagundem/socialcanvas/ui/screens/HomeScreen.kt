@@ -106,7 +106,7 @@ fun HomeScreen() {
         val text = "${article.title} ${article.summary} ${article.fullContent}"
         val categoryMatch = when (selected) {
             "Galatasaray" -> listOf("galatasaray", "okan buruk").any { text.contains(it, true) }
-            "Super Lig" -> listOf("super lig", "fenerbahce", "besiktas", "trabzonspor", "basaksehir", "super lig").any { text.contains(it, true) }
+            "Super Lig" -> listOf("super lig", "fenerbahce", "besiktas", "trabzonspor", "basaksehir").any { text.contains(it, true) }
             "Transfer" -> listOf("transfer", "imza", "anlasma", "kiralik", "bonservis").any { text.contains(it, true) }
             "Avrupa" -> article.category == "Dunya" || article.category == "Avrupa" ||
                 listOf("sampiyonlar", "premier league", "la liga", "serie a").any { text.contains(it, true) }
@@ -117,7 +117,7 @@ fun HomeScreen() {
     }
     val visibleArticles = if (tab == 1) articles.filter { it.id in savedIds } else filtered
 
-    Column(Modifier.fillMaxSize().background(Bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(Bg).statusBarsPadding().navigationBarsPadding()) {
         if (openedArticle != null) {
             ReaderScreen(
                 article = openedArticle!!,
@@ -413,7 +413,7 @@ private fun ReaderScreen(
                         AsyncImage(
                             model = article.imageUrl,
                             contentDescription = article.title,
-                            modifier = Modifier.fillMaxWidth().height(220.dp),
+                            modifier = Modifier.fillMaxWidth().height(240.dp),
                             contentScale = ContentScale.Crop
                         )
                     } else {
@@ -448,9 +448,10 @@ private fun ReaderScreen(
                         Text(
                             article.title,
                             color = TextPrimary,
-                            fontSize = 24.sp,
-                            lineHeight = 32.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontSize = 26.sp,
+                            lineHeight = 34.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = (-0.3).sp
                         )
                         Spacer(Modifier.height(16.dp))
                         HorizontalDivider(color = Border)
@@ -461,9 +462,10 @@ private fun ReaderScreen(
                     Text(
                         para,
                         color = TextPrimary,
-                        fontSize = 16.5.sp,
-                        lineHeight = 28.sp,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+                        fontSize = 17.sp,
+                        lineHeight = 30.sp,
+                        letterSpacing = 0.15.sp,
+                        modifier = Modifier.padding(horizontal = 22.dp, vertical = 7.dp)
                     )
                 }
                 item {
@@ -486,7 +488,7 @@ private fun ReaderScreen(
                     ) {
                         Icon(Icons.Outlined.OpenInNew, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Kaynak sayfayi ac", fontWeight = FontWeight.Bold)
+                        Text("Kaynagi ac", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -497,7 +499,7 @@ private fun ReaderScreen(
 @Composable
 private fun LeadStory(article: ForzaArticle, saved: Boolean, onClick: () -> Unit, onSave: () -> Unit) {
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Card)) {
-        Box(Modifier.fillMaxWidth().height(200.dp).clickable(onClick = onClick)) {
+        Box(Modifier.fillMaxWidth().height(220.dp).clickable(onClick = onClick)) {
             if (!article.imageUrl.isNullOrBlank()) {
                 AsyncImage(
                     model = article.imageUrl, contentDescription = article.title,
