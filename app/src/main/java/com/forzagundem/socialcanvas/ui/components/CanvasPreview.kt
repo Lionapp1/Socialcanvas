@@ -177,11 +177,28 @@ fun CanvasPreview(
                 SubjectLayer(state, onStateChange)
             }
 
-            if (state.designStyle == DesignStyle.EDITORIAL_LIGHT && state.imageUri == null) {
-                Column(Modifier.align(Alignment.TopCenter).padding(top = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("⚽", fontSize = 27.sp)
-                    Text("GALATASARAY  •  İSTATİSTİK", color = Color(0xFF8F1538), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            if (state.imageUri == null) {
+                val light = state.template == TemplateType.ISTATISTIK || state.template == TemplateType.ALINTI
+                val ink = if (light) Color(0xFF8F1538) else Color(0xFFFFC52E)
+                val category = when (state.template) {
+                    TemplateType.TRANSFER -> "TRANSFER MERKEZİ"
+                    TemplateType.HABER -> "SON GELİŞMELER"
+                    TemplateType.SKOR -> "MAÇ GÜNÜ"
+                    TemplateType.ALINTI -> "SÖZÜN ÖZÜ"
+                    TemplateType.THREADS -> "GÜNDEM"
+                    TemplateType.ISTATISTIK -> "GALATASARAY  •  İSTATİSTİK"
+                    TemplateType.BOS -> "SOCIALCANVAS"
                 }
+                Column(Modifier.align(Alignment.TopCenter).padding(top = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(state.template.iconEmoji, fontSize = if (state.template == TemplateType.ISTATISTIK) 27.sp else 23.sp)
+                    Text(category, color = ink, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                }
+                Text(
+                    "1905  •  FORZA GÜNDEM",
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
+                    color = if (light) Color(0xFF8F1538).copy(alpha = .72f) else Color.White.copy(alpha = .72f),
+                    fontSize = 8.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp
+                )
             }
 
             val textWidth = when (state.template) {
