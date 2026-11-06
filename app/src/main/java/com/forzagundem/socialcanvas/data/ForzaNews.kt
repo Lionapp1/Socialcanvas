@@ -31,19 +31,19 @@ object ForzaNewsRepository {
     private const val PREFS = "forzax_news"
     private const val ITEMS = "articles"
     private const val UPDATED = "updated_at"
-    private const val MAX_FULL_FETCH = 40
-    private const val MIN_SUMMARY_FOR_SKIP = 350
+    private const val MAX_FULL_FETCH = 45
+    private const val MIN_SUMMARY_FOR_SKIP = 320
 
     private val feeds = listOf(
-        Feed("A Spor", "https://www.aspor.com.tr/rss/news.xml", "Gundem"),
+        Feed("A Spor", "https://www.aspor.com.tr/rss/news.xml", "G\u00fcndem"),
         Feed("A Spor Galatasaray", "https://www.aspor.com.tr/rss/galatasaray.xml", "Galatasaray"),
-        Feed("A Spor Super Lig", "https://www.aspor.com.tr/rss/spor-toto-super-lig.xml", "Super Lig"),
-        Feed("A Spor Milli Takim", "https://www.aspor.com.tr/rss/millitakim.xml", "Milli Takim"),
-        Feed("A Spor Sampiyonlar Ligi", "https://www.aspor.com.tr/rss/sampiyonlar-ligi.xml", "Avrupa"),
+        Feed("A Spor S\u00fcper Lig", "https://www.aspor.com.tr/rss/spor-toto-super-lig.xml", "S\u00fcper Lig"),
+        Feed("A Spor Milli Tak\u0131m", "https://www.aspor.com.tr/rss/millitakim.xml", "Milli Tak\u0131m"),
+        Feed("A Spor \u015eampiyonlar Ligi", "https://www.aspor.com.tr/rss/sampiyonlar-ligi.xml", "Avrupa"),
         Feed("A Spor Avrupa Ligi", "https://www.aspor.com.tr/rss/avrupa-ligi.xml", "Avrupa"),
         Feed("TRT Spor", "https://www.trthaber.com/spor_articles.rss", "Spor"),
-        Feed("Haberturk", "https://www.haberturk.com/rss/spor.xml", "Spor"),
-        Feed("Sky Sports", "https://www.skysports.com/rss/11095", "Dunya")
+        Feed("Habert\u00fcrk", "https://www.haberturk.com/rss/spor.xml", "Spor"),
+        Feed("Sky Sports", "https://www.skysports.com/rss/11095", "D\u00fcnya")
     )
     private data class Feed(val source: String, val url: String, val category: String)
 
@@ -97,9 +97,7 @@ object ForzaNewsRepository {
 
     suspend fun refresh(context: Context): List<ForzaArticle> = withContext(Dispatchers.IO) {
         val collected = mutableListOf<ForzaArticle>()
-        feeds.forEach { feed ->
-            runCatching { collected += readFeed(feed) }
-        }
+        feeds.forEach { feed -> runCatching { collected += readFeed(feed) } }
 
         val previous = cached(context).associateBy { it.link }
         var merged = (collected + previous.values)
@@ -117,10 +115,7 @@ object ForzaNewsRepository {
             } else item
         }
 
-        val needFull = merged
-            .filter { it.fullContent.length < MIN_SUMMARY_FOR_SKIP }
-            .take(MAX_FULL_FETCH)
-
+        val needFull = merged.filter { it.fullContent.length < MIN_SUMMARY_FOR_SKIP }.take(MAX_FULL_FETCH)
         if (needFull.isNotEmpty()) {
             val enriched = fetchFullContents(needFull)
             val map = enriched.associateBy { it.link }
@@ -140,7 +135,7 @@ object ForzaNewsRepository {
         val editorText = toEditorStyle(full)
         val updated = article.copy(
             fullContent = editorText,
-            summary = editorText.take(280).let { if (editorText.length > 280) it + "..." else it }
+            summary = editorText.take(280).let { if (editorText.length > 280) it + "\u2026" else it }
         )
         val all = cached(context).map { if (it.link == updated.link) updated else it }
         if (all.none { it.link == updated.link }) {
@@ -155,17 +150,13 @@ object ForzaNewsRepository {
         articles.map { article ->
             async(Dispatchers.IO) {
                 val cachedText = fullCache[article.link]
-                val full = cachedText ?: runCatching { extractFullArticle(article.link) }.getOrNull()
-                    ?.takeIf { it.length > 120 }
-
+                val full = cachedText ?: runCatching { extractFullArticle(article.link) }.getOrNull()?.takeIf { it.length > 120 }
                 if (!full.isNullOrBlank()) {
                     fullCache[article.link] = full
                     val editorText = toEditorStyle(full)
                     article.copy(
                         fullContent = editorText,
-                        summary = editorText.take(280).let {
-                            if (editorText.length > 280) it + "..." else it
-                        }
+                        summary = editorText.take(280).let { if (editorText.length > 280) it + "\u2026" else it }
                     )
                 } else article
             }
@@ -177,10 +168,7 @@ object ForzaNewsRepository {
             connectTimeout = 10000
             readTimeout = 14000
             instanceFollowRedirects = true
-            setRequestProperty(
-                "User-Agent",
-                "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0 Mobile Safari/537.36 ForzaX/1.2"
-            )
+            setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0 Mobile Safari/537.36 ForzaX/1.2")
             setRequestProperty("Accept", "text/html,application/xhtml+xml")
             setRequestProperty("Accept-Language", "tr-TR,tr;q=0.9,en;q=0.8")
         }
@@ -203,8 +191,8 @@ object ForzaNewsRepository {
 
         val candidates = listOf(
             Regex("(?is)<article[^>]*>(.*?)</article>"),
-            Regex("(?is)<div[^>]*class=[\"'][^\"']*(?:article-body|news-content|haber-metni|detail-content|content-body|story-body|entry-content|post-content|news-detail|haberDetay)[^\"']*[\"'][^>]*>(.*?)</div>"),
-            Regex("(?is)<div[^>]*id=[\"'](?:content|article|haber|news|news-body)[\"'][^>]*>(.*?)</div>")
+            Regex("(?is)<div[^>]*class=[\"'][^\"']*(?:article-body|news-content|haber-metni|detail-content|content-body|story-body|entry-content|post-content|news-detail|haberDetay|news-text)[^\"']*[\"'][^>]*>(.*?)</div>"),
+            Regex("(?is)<div[^>]*id=[\"'](?:content|article|haber|news|news-body|article-content)[\"'][^>]*>(.*?)</div>")
         )
 
         var bodyHtml: String? = null
@@ -232,26 +220,22 @@ object ForzaNewsRepository {
     }
 
     private fun isNoise(text: String): Boolean {
-        val lower = text.lowercase(Locale.ROOT)
+        val lower = text.lowercase(Locale("tr"))
         val noise = listOf(
-            "cookie", "cerez", "abone ol", "reklam", "advertisement",
-            "tiklayin", "detayli bilgi", "whatsapp", "telegram kanal",
-            "uygulamamizi indir", "bizi takip edin", "gizlilik politikasi",
-            "iletisim formu", "e-bulten", "newsletter"
+            "cookie", "\u00e7erez", "abone ol", "reklam", "advertisement",
+            "t\u0131klay\u0131n", "detayl\u0131 bilgi", "whatsapp", "telegram kanal",
+            "uygulamam\u0131z\u0131 indir", "bizi takip edin", "gizlilik politikas\u0131",
+            "ileti\u015fim formu", "e-b\u00fclten", "newsletter", "copyright"
         )
         return noise.any { lower.contains(it) } || text.length < 35
     }
 
     private fun toEditorStyle(raw: String): String {
-        val cleaned = raw
-            .replace(Regex("[ \\t]+"), " ")
-            .replace(Regex("\\n{3,}"), "\n\n")
-            .trim()
-
-        return if (cleaned.length > 4500) {
-            val cut = cleaned.take(4200)
+        val cleaned = raw.replace(Regex("[ \\t]+"), " ").replace(Regex("\\n{3,}"), "\n\n").trim()
+        return if (cleaned.length > 5000) {
+            val cut = cleaned.take(4600)
             val lastDot = cut.lastIndexOf('.')
-            if (lastDot > 3000) cut.take(lastDot + 1) else cut + "..."
+            if (lastDot > 3200) cut.take(lastDot + 1) else cut + "\u2026"
         } else cleaned
     }
 
@@ -296,11 +280,8 @@ object ForzaNewsRepository {
                                     }
                                     "pubdate", "published", "updated" -> date = parser.nextText()
                                     "thumbnail", "content", "enclosure" -> {
-                                        val u = parser.getAttributeValue(null, "url")
-                                            ?: parser.getAttributeValue(null, "href")
-                                        if (!u.isNullOrBlank() &&
-                                            (tag != "content" || parser.getAttributeValue(null, "medium") == "image")
-                                        ) image = u
+                                        val u = parser.getAttributeValue(null, "url") ?: parser.getAttributeValue(null, "href")
+                                        if (!u.isNullOrBlank() && (tag != "content" || parser.getAttributeValue(null, "medium") == "image")) image = u
                                     }
                                     "image" -> image = parser.nextText().trim()
                                 }
@@ -310,17 +291,11 @@ object ForzaNewsRepository {
                             if (parser.name.equals("item", true) || parser.name.equals("entry", true)) {
                                 inItem = false
                                 if (title.isNotBlank() && link.startsWith("http")) {
-                                    val short = description.take(260)
+                                    val short = description.take(280)
                                     result += ForzaArticle(
-                                        id = link,
-                                        title = title,
-                                        summary = short,
-                                        fullContent = short,
-                                        link = link,
-                                        source = feed.source,
-                                        category = feed.category,
-                                        imageUrl = image,
-                                        publishedAt = date
+                                        id = link, title = title, summary = short, fullContent = short,
+                                        link = link, source = feed.source, category = feed.category,
+                                        imageUrl = image, publishedAt = date
                                     )
                                 }
                             }
@@ -344,9 +319,7 @@ object ForzaNewsRepository {
             "yyyy-MM-dd HH:mm:ss"
         )
         return patterns.firstNotNullOfOrNull { pattern ->
-            runCatching {
-                java.text.SimpleDateFormat(pattern, Locale.US).parse(raw)?.time
-            }.getOrNull()
+            runCatching { java.text.SimpleDateFormat(pattern, Locale.US).parse(raw)?.time }.getOrNull()
         } ?: 0L
     }
 
