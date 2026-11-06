@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.input.pointer.pointerInput
@@ -299,21 +300,18 @@ fun CanvasPreview(
                     drawCircle(pitch, size.width * .12f, androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2), style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
                     drawRect(pitch, androidx.compose.ui.geometry.Offset(size.width * .22f, 0f), androidx.compose.ui.geometry.Size(size.width * .56f, size.height * .14f), style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
                     drawRect(pitch, androidx.compose.ui.geometry.Offset(size.width * .22f, size.height * .86f), androidx.compose.ui.geometry.Size(size.width * .56f, size.height * .14f), style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
+                    val labelPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                        color = android.graphics.Color.WHITE
+                        textSize = 9.sp.toPx()
+                        textAlign = android.graphics.Paint.Align.CENTER
+                        typeface = android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.BOLD)
+                        setShadowLayer(3f, 0f, 1f, android.graphics.Color.BLACK)
+                    }
                     positions.forEachIndexed { index, pos ->
                         val x = size.width * pos.second
                         val y = size.height * pos.first
                         drawCircle(Color(0xFFF2B51B), size.width * .026f, androidx.compose.ui.geometry.Offset(x, y))
-                    }
-                }
-                Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 52.dp)) {
-                    positions.forEachIndexed { index, pos ->
-                        Box(Modifier.fillMaxWidth().weight(1f)) {
-                            if (index < names.size) {
-                                Text(names[index], color = Color.White, fontSize = 7.sp, fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = .62f), RoundedCornerShape(5.dp)).padding(horizontal = 4.dp, vertical = 2.dp),
-                                    textAlign = TextAlign.Center, maxLines = 1)
-                            }
-                        }
+                        names.getOrNull(index)?.let { drawContext.canvas.nativeCanvas.drawText(it.take(15), x, y + size.width * .055f, labelPaint) }
                     }
                 }
                 Text("${state.homeTeamName}  ·  ${state.formation}", modifier = Modifier.align(Alignment.TopCenter).padding(top = 34.dp),
