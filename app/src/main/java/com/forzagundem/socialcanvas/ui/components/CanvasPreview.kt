@@ -248,6 +248,78 @@ fun CanvasPreview(
                 fontSize = 8.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp
             )
 
+            if (state.showMatchScore && !state.showLineup) {
+                Row(
+                    Modifier.align(Alignment.TopCenter).padding(top = previewHeight * 0.24f)
+                        .fillMaxWidth(0.90f).clip(RoundedCornerShape(18.dp))
+                        .background(Color.Black.copy(alpha = if (state.imageUri != null) .48f else .28f))
+                        .padding(horizontal = 10.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                        if (state.homeTeamLogoUri != null) AsyncImage(
+                            model = state.homeTeamLogoUri, contentDescription = "${state.homeTeamName} logosu",
+                            modifier = Modifier.width((42f * state.logoScale).dp).height((42f * state.logoScale).dp),
+                            contentScale = ContentScale.Fit
+                        )
+                        Text(state.homeTeamName, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 2)
+                    }
+                    Text(state.matchScore, color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp))
+                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                        if (state.awayTeamLogoUri != null) AsyncImage(
+                            model = state.awayTeamLogoUri, contentDescription = "${state.awayTeamName} logosu",
+                            modifier = Modifier.width((42f * state.logoScale).dp).height((42f * state.logoScale).dp),
+                            contentScale = ContentScale.Fit
+                        )
+                        Text(state.awayTeamName, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 2)
+                    }
+                }
+            }
+
+            if (state.showLineup) {
+                val names = state.lineupPlayers.lines().map { it.trim() }.filter { it.isNotBlank() }.take(11)
+                val lines = state.formation.split("-").mapNotNull { it.toIntOrNull() }
+                val positions = buildList {
+                    add(0.88f to 0.50f)
+                    var y = 0.72f
+                    lines.forEach { count ->
+                        repeat(count) { index ->
+                            add((y - lines.indexOf(count) * 0.0f) to ((index + 1f) / (count + 1f)))
+                        }
+                        y -= 0.20f
+                    }
+                }.take(11)
+                Canvas(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 52.dp)) {
+                    val pitch = Color.White.copy(alpha = .82f)
+                    val stroke = 1.dp.toPx()
+                    drawRoundRect(Color(0xFF123E2C).copy(alpha = .96f), cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()))
+                    drawRoundRect(pitch, style = androidx.compose.ui.graphics.drawscope.Stroke(stroke), cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()))
+                    drawLine(pitch, androidx.compose.ui.geometry.Offset(0f, size.height / 2), androidx.compose.ui.geometry.Offset(size.width, size.height / 2), stroke)
+                    drawCircle(pitch, size.width * .12f, androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2), style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
+                    drawRect(pitch, androidx.compose.ui.geometry.Offset(size.width * .22f, 0f), androidx.compose.ui.geometry.Size(size.width * .56f, size.height * .14f), style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
+                    drawRect(pitch, androidx.compose.ui.geometry.Offset(size.width * .22f, size.height * .86f), androidx.compose.ui.geometry.Size(size.width * .56f, size.height * .14f), style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
+                    positions.forEachIndexed { index, pos ->
+                        val x = size.width * pos.second
+                        val y = size.height * pos.first
+                        drawCircle(Color(0xFFF2B51B), size.width * .026f, androidx.compose.ui.geometry.Offset(x, y))
+                    }
+                }
+                Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 52.dp)) {
+                    positions.forEachIndexed { index, pos ->
+                        Box(Modifier.fillMaxWidth().weight(1f)) {
+                            if (index < names.size) {
+                                Text(names[index], color = Color.White, fontSize = 7.sp, fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = .62f), RoundedCornerShape(5.dp)).padding(horizontal = 4.dp, vertical = 2.dp),
+                                    textAlign = TextAlign.Center, maxLines = 1)
+                            }
+                        }
+                    }
+                }
+                Text("${state.homeTeamName}  ·  ${state.formation}", modifier = Modifier.align(Alignment.TopCenter).padding(top = 34.dp),
+                    color = Color.White, fontWeight = FontWeight.Black, fontSize = 11.sp)
+            }
+
             val textWidth = when (state.template) {
                 com.forzagundem.socialcanvas.data.TemplateType.TRANSFER,
                 com.forzagundem.socialcanvas.data.TemplateType.HABER,
@@ -256,7 +328,7 @@ fun CanvasPreview(
                 com.forzagundem.socialcanvas.data.TemplateType.ALINTI -> 0.82f
                 else -> 0.90f
             }
-            Column(
+            if (!state.showLineup) Column(
                 Modifier.fillMaxWidth(textWidth).align(Alignment.Center)
                     .graphicsLayer {
                         translationX = state.textX * size.width
