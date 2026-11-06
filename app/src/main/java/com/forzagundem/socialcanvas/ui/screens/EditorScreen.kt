@@ -96,6 +96,9 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
     val awayLogoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) state = state.copy(awayTeamLogoUri = keepUri(uri), showMatchScore = true)
     }
+    val stickerPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) state = state.copy(stickerUri = keepUri(uri))
+    }
 
     fun export(share: Boolean) {
         if (exporting) return
@@ -312,6 +315,19 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                         state = state.copy(homeTeamLogoUri = null, awayTeamLogoUri = null)
                     }, Modifier.fillMaxWidth())
                 }
+
+                Spacer(Modifier.height(18.dp))
+                SectionLabel("MANUEL ÖĞE · LOGO / İKON / ETİKET")
+                ActionRow("Galeriden PNG veya görsel ekle", "Kendi ikonunu, kulüp armasını veya etiketi yükle") {
+                    stickerPicker.launch(arrayOf("image/*"))
+                }
+                if (state.stickerUri != null) {
+                    EditorSlider("Manuel öğe boyutu", state.stickerScale, 0.15f..2.5f) { state = state.copy(stickerScale = it) }
+                    EditorSlider("Manuel öğe yatay konum", state.stickerX, -0.8f..0.8f) { state = state.copy(stickerX = it) }
+                    EditorSlider("Manuel öğe dikey konum", state.stickerY, -0.8f..0.8f) { state = state.copy(stickerY = it) }
+                    DarkOutlinedButton("Manuel öğeyi kaldır", { state = state.copy(stickerUri = null, stickerX = 0f, stickerY = 0f, stickerScale = 1f) }, Modifier.fillMaxWidth())
+                }
+                Text("Eklediğin görseli önizleme üzerinde parmağınla sürükleyerek de konumlandırabilirsin.", color = TextSecondary, fontSize = 11.sp)
 
                 Spacer(Modifier.height(18.dp))
                 SectionLabel("İLK 11 · SAHA DİZİLİŞİ")
