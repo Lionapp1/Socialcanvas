@@ -33,9 +33,28 @@ object DesignAssistant {
         }
 
         val lines = source.lines().map { it.trim() }.filter { it.isNotBlank() }
-        val title = lines.firstOrNull()?.take(92) ?: source.take(92)
-        val remainder = if (lines.size > 1) lines.drop(1).joinToString(" ") else {
-            source.removePrefix(title).trim().trimStart('-', '—', ':', '.', ' ')
+        val firstLine = lines.firstOrNull().orEmpty()
+        val sentences = firstLine.split(Regex("(?<=[.!?;])\\\\s+|\\\\s+[•|]\\\\s+"))
+            .map { it.trim().trimEnd('.', ';') }.filter { it.isNotBlank() }
+        val score = Regex("\\\\b([0-9]{1,2})\\\\s*[-:]\\\\s*([0-9]{1,2})\\\\b").find(source)
+        val title = when {
+            score != null && template == TemplateType.SKOR -> {
+                val prefix = firstLine.substring(0, score.range.first).trim().trimEnd(',', ':')
+                val suffix = firstLine.substring(score.range.last + 1).trim().trimStart(',', ':', ' ')
+                when {
+                    prefix.isNotBlank() && suffix.isNotBlank() -> "$prefix ${score.value} $suffix".take(92)
+                    prefix.isNotBlank() -> "$prefix ${score.value}".take(92)
+                    else -> score.value
+                }
+            }
+            sentences.isNotEmpty() -> sentences.first().take(92)
+            else -> source.take(92)
+        }
+        val remainder = when {
+            lines.size > 1 -> lines.drop(1).joinToString(" ")
+            firstLine.length > title.length -> firstLine.removePrefix(title).trim().trimStart('-', '—', ':', '.', ',', ' ')
+            sentences.size > 1 -> sentences.drop(1).joinToString(" ")
+            else -> ""
         }
         val subtitle = remainder.take(220).ifBlank {
             when (template) {
