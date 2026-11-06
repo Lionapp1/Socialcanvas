@@ -102,6 +102,11 @@ object DesignExporter {
             paint.color = if (editorial) Color.argb(14, 143, 21, 56) else Color.argb(19, 242, 181, 27)
             canvas.drawPath(lion, paint)
             canvas.drawOval(RectF(width * .37f, height * .31f, width * .63f, height * .65f), paint)
+            paint.strokeWidth = max(4f, width * .006f)
+            canvas.drawCircle(width * .435f, height * .455f, width * .009f, paint)
+            canvas.drawCircle(width * .565f, height * .455f, width * .009f, paint)
+            canvas.drawLine(width * .455f, height * .535f, width * .50f, height * .565f, paint)
+            canvas.drawLine(width * .50f, height * .565f, width * .545f, height * .535f, paint)
         }
 
         state.imageUri?.let { raw ->
