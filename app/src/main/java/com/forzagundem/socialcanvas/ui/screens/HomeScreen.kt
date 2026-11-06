@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.forzagundem.socialcanvas.data.TemplateType
+import com.forzagundem.socialcanvas.ui.components.GoldButton
 import com.forzagundem.socialcanvas.ui.theme.Bg
 import com.forzagundem.socialcanvas.ui.theme.Border
 import com.forzagundem.socialcanvas.ui.theme.Card
@@ -93,7 +94,20 @@ fun HomeScreen(
             }
         }
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(22.dp))
+        GoldButton(
+            "Yazını tasarıma dönüştür",
+            { onTemplateSelected(TemplateType.THREADS) },
+            Modifier.fillMaxWidth()
+        )
+        Text(
+            "Metnini yapıştır; asistan içeriğe uygun tasarım düzenini seçsin.",
+            color = TextMuted,
+            fontSize = 11.sp,
+            modifier = Modifier.padding(top = 7.dp)
+        )
+
+        Spacer(Modifier.height(22.dp))
 
         Text(
             "Şablon seç",
