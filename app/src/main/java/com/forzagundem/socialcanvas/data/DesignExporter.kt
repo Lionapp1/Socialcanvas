@@ -100,17 +100,17 @@ object DesignExporter {
             }
         }
 
-        if (!editorial) {
+        if (state.imageUri != null) {
             paint.color = Color.argb((state.darken.coerceIn(0f, 0.9f) * 255).toInt(), 0, 0, 0)
             canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         }
         // Match the preview's cinematic top/bottom contrast treatment.
-        if (!editorial) paint.shader = LinearGradient(
+        if (state.imageUri != null) paint.shader = LinearGradient(
             0f, 0f, 0f, height.toFloat(),
             intArrayOf(Color.argb(72, 0, 0, 0), Color.TRANSPARENT, Color.argb(24, 0, 0, 0), Color.argb(158, 0, 0, 0)),
             floatArrayOf(0f, 0.42f, 0.72f, 1f), Shader.TileMode.CLAMP
         )
-        if (!editorial) canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        if (state.imageUri != null) canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
         paint.color = Color.WHITE
 
@@ -181,7 +181,8 @@ object DesignExporter {
         }
         if (state.textShadow) paint.setShadowLayer(8f, 0f, 4f, Color.BLACK) else paint.clearShadowLayer()
         val textWidth = width * when (state.template) {
-            TemplateType.TRANSFER, TemplateType.HABER, TemplateType.THREADS, TemplateType.ISTATISTIK -> 0.48f
+            TemplateType.TRANSFER, TemplateType.HABER, TemplateType.THREADS -> 0.48f
+            TemplateType.ISTATISTIK -> if (editorial) 0.84f else 0.48f
             TemplateType.ALINTI -> 0.82f
             else -> 0.90f
         }
@@ -201,6 +202,27 @@ object DesignExporter {
             drawWrapped(canvas, state.subtitle, anchorX, textY + paint.textSize * 1.7f, paint, textWidth)
         }
         paint.clearShadowLayer()
+
+        if (state.imageUri == null) {
+            val light = editorial
+            paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            paint.textAlign = Paint.Align.CENTER
+            paint.textSize = 34f
+            paint.color = if (light) Color.rgb(143, 21, 56) else Color.rgb(255, 197, 46)
+            val category = when (state.template) {
+                TemplateType.TRANSFER -> "TRANSFER MERKEZİ"
+                TemplateType.HABER -> "SON GELİŞMELER"
+                TemplateType.SKOR -> "MAÇ GÜNÜ"
+                TemplateType.ALINTI -> "SÖZÜN ÖZÜ"
+                TemplateType.THREADS -> "GÜNDEM"
+                TemplateType.ISTATISTIK -> "GALATASARAY  •  İSTATİSTİK"
+                TemplateType.BOS -> "SOCIALCANVAS"
+            }
+            canvas.drawText(category, width * .5f, height * .105f, paint)
+            paint.textSize = 26f
+            paint.color = if (light) Color.rgb(143, 21, 56) else Color.argb(190, 255, 255, 255)
+            canvas.drawText("1905  •  FORZA GÜNDEM", width * .5f, height * .965f, paint)
+        }
 
         if (state.subjectOnTop) drawSubject()
 
