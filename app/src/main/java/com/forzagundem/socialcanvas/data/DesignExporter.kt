@@ -28,9 +28,22 @@ object DesignExporter {
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
-        paint.shader = LinearGradient(0f, 0f, 0f, height.toFloat(), Color.rgb(25, 25, 25), Color.rgb(8, 8, 8), Shader.TileMode.CLAMP)
+        val editorial = state.designStyle == DesignStyle.EDITORIAL_LIGHT && state.imageUri == null
+        paint.shader = if (editorial) null else LinearGradient(0f, 0f, 0f, height.toFloat(), Color.rgb(25, 25, 25), Color.rgb(8, 8, 8), Shader.TileMode.CLAMP)
+        paint.color = if (editorial) Color.rgb(250, 250, 248) else Color.rgb(25, 25, 25)
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
+        if (editorial) {
+            paint.color = Color.argb(34, 143, 21, 56)
+            canvas.drawCircle(width * 0.92f, height * 0.08f, min(width, height) * 0.20f, paint)
+            paint.color = Color.argb(20, 242, 181, 27)
+            canvas.drawCircle(width * 0.06f, height * 0.90f, min(width, height) * 0.13f, paint)
+            paint.color = Color.rgb(143, 21, 56)
+            paint.strokeWidth = 5f
+            canvas.drawLine(width * 0.08f, height * 0.12f, width * 0.34f, height * 0.12f, paint)
+            paint.color = Color.rgb(242, 181, 27)
+            canvas.drawLine(width * 0.66f, height * 0.12f, width * 0.92f, height * 0.12f, paint)
+        }
 
         state.imageUri?.let { raw ->
             decode(context, raw)?.let { source ->
@@ -47,15 +60,17 @@ object DesignExporter {
             }
         }
 
-        paint.color = Color.argb((state.darken.coerceIn(0f, 0.9f) * 255).toInt(), 0, 0, 0)
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        if (!editorial) {
+            paint.color = Color.argb((state.darken.coerceIn(0f, 0.9f) * 255).toInt(), 0, 0, 0)
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        }
         // Match the preview's cinematic top/bottom contrast treatment.
-        paint.shader = LinearGradient(
+        if (!editorial) paint.shader = LinearGradient(
             0f, 0f, 0f, height.toFloat(),
             intArrayOf(Color.argb(72, 0, 0, 0), Color.TRANSPARENT, Color.argb(24, 0, 0, 0), Color.argb(158, 0, 0, 0)),
             floatArrayOf(0f, 0.42f, 0.72f, 1f), Shader.TileMode.CLAMP
         )
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        if (!editorial) canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
         paint.color = Color.WHITE
 
@@ -82,11 +97,12 @@ object DesignExporter {
             val left = width * 0.12f
             val right = width * 0.88f
             val top = height * 0.70f
-            val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(46, 255, 255, 255); strokeWidth = 18f; strokeCap = Paint.Cap.ROUND }
-            val bar = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(255, 183, 0); strokeWidth = 18f; strokeCap = Paint.Cap.ROUND }
+            val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = if (editorial) Color.rgb(225, 225, 225) else Color.argb(46, 255, 255, 255); strokeWidth = 18f; strokeCap = Paint.Cap.ROUND }
+            val bar = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(143, 21, 56); strokeWidth = 18f; strokeCap = Paint.Cap.ROUND }
             listOf(state.statOne, state.statTwo, state.statThree).forEachIndexed { index, fraction ->
                 val y = top + index * 42f
                 canvas.drawLine(left, y, right, y, track)
+                bar.color = if (index % 2 == 0) Color.rgb(143, 21, 56) else Color.rgb(242, 181, 27)
                 canvas.drawLine(left, y, left + (right - left) * fraction, y, bar)
             }
         }
