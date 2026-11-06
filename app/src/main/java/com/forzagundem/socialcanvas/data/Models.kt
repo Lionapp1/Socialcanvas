@@ -71,7 +71,17 @@ data class EditorState(
     val textShadow: Boolean = true,
     val statOne: Float = 0.62f,
     val statTwo: Float = 0.78f,
-    val statThree: Float = 0.44f
+    val statThree: Float = 0.44f,
+    val homeTeamName: String = "EV SAHİBİ",
+    val awayTeamName: String = "DEPLASMAN",
+    val homeTeamLogoUri: String? = null,
+    val awayTeamLogoUri: String? = null,
+    val matchScore: String = "0 - 0",
+    val showMatchScore: Boolean = false,
+    val showLineup: Boolean = false,
+    val formation: String = "4-3-3",
+    val lineupPlayers: String = "Kaleci\\nSağ Bek\\nStoper\\nStoper\\nSol Bek\\nÖn Libero\\nMerkez Orta Saha\\nMerkez Orta Saha\\nSağ Kanat\\nSantrfor\\nSol Kanat",
+    val logoScale: Float = 1f
 )
 
 
