@@ -282,7 +282,7 @@ object DesignExporter {
             TextAlignMode.CENTER -> textX
             TextAlignMode.RIGHT -> textX + textWidth / 2f
         }
-        if (!state.showLineup) {
+        if (!state.showLineup && !state.showMatchScore) {
             drawWrapped(canvas, state.headline, anchorX, textY, paint, textWidth)
             if (state.subtitle.isNotBlank()) {
                 paint.typeface = Typeface.create(family, Typeface.NORMAL)
