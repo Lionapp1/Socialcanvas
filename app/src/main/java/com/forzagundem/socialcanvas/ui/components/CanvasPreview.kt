@@ -39,6 +39,7 @@ import com.forzagundem.socialcanvas.data.AspectRatio
 import com.forzagundem.socialcanvas.data.CanvasFont
 import com.forzagundem.socialcanvas.data.EditorState
 import com.forzagundem.socialcanvas.data.DesignStyle
+import com.forzagundem.socialcanvas.data.TemplateType
 import com.forzagundem.socialcanvas.data.TextAlignMode
 import com.forzagundem.socialcanvas.ui.theme.Gold
 import com.forzagundem.socialcanvas.ui.theme.TextPrimary
@@ -85,40 +86,71 @@ fun CanvasPreview(
                     contentScale = ContentScale.Crop
                 )
             } else {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Box(
-                        Modifier.fillMaxWidth(0.52f).aspectRatio(0.72f).clip(RoundedCornerShape(18.dp))
-                            .background(Brush.verticalGradient(listOf(Color(0xFF454545), Color(0xFF171717))))
-                            .padding(12.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("＋", fontSize = 42.sp, color = Gold, fontWeight = FontWeight.Light)
-                            Text("Fotoğrafını ekle", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            Text("Canlı önizleme burada görünecek", color = TextSecondary, fontSize = 9.sp)
-                        }
-                    }
-                }
+                // Each template owns a real art-directed background; no generic empty placeholder.
+                Box(Modifier.fillMaxSize().background(templateBrush(state)))
             }
 
-            // Editorial infographic canvas: restrained club-colour geometry replaces the empty background.
-            if (state.designStyle == DesignStyle.EDITORIAL_LIGHT && state.imageUri == null) {
-                Canvas(Modifier.fillMaxSize()) {
-                    val red = Color(0xFF8F1538)
-                    val gold = Color(0xFFF2B51B)
-                    drawCircle(gold.copy(alpha = 0.14f), size.minDimension * 0.20f, androidx.compose.ui.geometry.Offset(size.width * 0.92f, size.height * 0.08f))
-                    drawCircle(red.copy(alpha = 0.08f), size.minDimension * 0.13f, androidx.compose.ui.geometry.Offset(size.width * 0.06f, size.height * 0.90f))
-                    drawLine(red.copy(alpha = 0.38f), androidx.compose.ui.geometry.Offset(size.width * 0.08f, size.height * 0.12f), androidx.compose.ui.geometry.Offset(size.width * 0.34f, size.height * 0.12f), 2.dp.toPx())
-                    drawLine(gold, androidx.compose.ui.geometry.Offset(size.width * 0.66f, size.height * 0.12f), androidx.compose.ui.geometry.Offset(size.width * 0.92f, size.height * 0.12f), 3.dp.toPx())
-                    drawLine(Color(0xFFDDDDDD), androidx.compose.ui.geometry.Offset(size.width * 0.08f, size.height * 0.88f), androidx.compose.ui.geometry.Offset(size.width * 0.92f, size.height * 0.88f), 1.dp.toPx())
-                }
-            } else {
-                // Cinematic grade is reserved for photo-led templates.
+            if (state.imageUri != null) {
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = darken)))
                 Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
                     0f to Color.Black.copy(alpha = 0.28f), 0.42f to Color.Transparent,
                     0.72f to Color.Black.copy(alpha = 0.10f), 1f to Color.Black.copy(alpha = 0.62f)
                 )))
+            } else {
+                Canvas(Modifier.fillMaxSize()) {
+                    val red = Color(0xFF8F1538)
+                    val gold = Color(0xFFF2B51B)
+                    val white = Color.White
+                    val w = size.width
+                    val h = size.height
+                    when (state.template) {
+                        com.forzagundem.socialcanvas.data.TemplateType.TRANSFER -> {
+                            drawRect(Brush.verticalGradient(listOf(Color(0xFF35101F), Color(0xFF100D13), Color(0xFF570D2A))))
+                            drawCircle(gold.copy(alpha = .13f), w * .42f, androidx.compose.ui.geometry.Offset(w * .90f, h * .22f))
+                            for (i in 0..5) drawLine(white.copy(alpha = .07f), androidx.compose.ui.geometry.Offset(w * (.48f + i * .10f), 0f), androidx.compose.ui.geometry.Offset(w * (.18f + i * .10f), h), 1.dp.toPx())
+                            drawRoundRect(red, androidx.compose.ui.geometry.Offset(w * .07f, h * .12f), androidx.compose.ui.geometry.Size(w * .018f, h * .62f))
+                            drawCircle(gold, w * .035f, androidx.compose.ui.geometry.Offset(w * .86f, h * .19f))
+                        }
+                        com.forzagundem.socialcanvas.data.TemplateType.HABER -> {
+                            drawRect(Brush.verticalGradient(listOf(Color(0xFF17191F), Color(0xFF30323A), Color(0xFF111216))))
+                            drawRect(red, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Size(w, h * .018f))
+                            drawRect(gold, androidx.compose.ui.geometry.Offset(w * .08f, h * .17f), androidx.compose.ui.geometry.Size(w * .84f, h * .0025f))
+                            drawCircle(red.copy(alpha = .20f), w * .38f, androidx.compose.ui.geometry.Offset(w * .92f, h * .82f))
+                        }
+                        com.forzagundem.socialcanvas.data.TemplateType.SKOR -> {
+                            drawRect(Brush.verticalGradient(listOf(Color(0xFF111820), Color(0xFF26313A), Color(0xFF11151B))))
+                            drawCircle(red.copy(alpha = .28f), w * .40f, androidx.compose.ui.geometry.Offset(w * .02f, h * .46f))
+                            drawCircle(gold.copy(alpha = .18f), w * .40f, androidx.compose.ui.geometry.Offset(w * .98f, h * .46f))
+                            for (i in 0..8) drawLine(white.copy(alpha = .045f), androidx.compose.ui.geometry.Offset(w * i / 8f, h * .25f), androidx.compose.ui.geometry.Offset(w * i / 8f, h * .78f), 1.dp.toPx())
+                            drawRoundRect(white.copy(alpha = .10f), androidx.compose.ui.geometry.Offset(w * .08f, h * .37f), androidx.compose.ui.geometry.Size(w * .84f, h * .27f), androidx.compose.ui.geometry.CornerRadius(18.dp.toPx()))
+                        }
+                        com.forzagundem.socialcanvas.data.TemplateType.ALINTI -> {
+                            drawRect(Color(0xFFFAF7F0))
+                            drawCircle(gold.copy(alpha = .22f), w * .48f, androidx.compose.ui.geometry.Offset(w, 0f))
+                            drawCircle(red.copy(alpha = .08f), w * .34f, androidx.compose.ui.geometry.Offset(0f, h))
+                            drawRoundRect(red, androidx.compose.ui.geometry.Offset(w * .09f, h * .18f), androidx.compose.ui.geometry.Size(w * .018f, h * .60f))
+                            drawLine(Color(0xFFDED5C8), androidx.compose.ui.geometry.Offset(w * .16f, h * .82f), androidx.compose.ui.geometry.Offset(w * .84f, h * .82f), 1.dp.toPx())
+                        }
+                        com.forzagundem.socialcanvas.data.TemplateType.THREADS -> {
+                            drawRect(Brush.verticalGradient(listOf(Color(0xFF20212A), Color(0xFF111217))))
+                            drawCircle(red.copy(alpha = .18f), w * .48f, androidx.compose.ui.geometry.Offset(w, h))
+                            drawCircle(gold.copy(alpha = .12f), w * .30f, androidx.compose.ui.geometry.Offset(0f, 0f))
+                            drawRoundRect(white.copy(alpha = .09f), androidx.compose.ui.geometry.Offset(w * .07f, h * .14f), androidx.compose.ui.geometry.Size(w * .86f, h * .70f), androidx.compose.ui.geometry.CornerRadius(22.dp.toPx()))
+                        }
+                        com.forzagundem.socialcanvas.data.TemplateType.ISTATISTIK -> {
+                            drawRect(Color(0xFFFAFAF8))
+                            drawCircle(gold.copy(alpha = .15f), w * .34f, androidx.compose.ui.geometry.Offset(w * .96f, h * .08f))
+                            drawCircle(red.copy(alpha = .08f), w * .22f, androidx.compose.ui.geometry.Offset(w * .02f, h * .92f))
+                            drawLine(red.copy(alpha = .55f), androidx.compose.ui.geometry.Offset(w * .08f, h * .13f), androidx.compose.ui.geometry.Offset(w * .34f, h * .13f), 2.dp.toPx())
+                            drawLine(gold, androidx.compose.ui.geometry.Offset(w * .66f, h * .13f), androidx.compose.ui.geometry.Offset(w * .92f, h * .13f), 3.dp.toPx())
+                        }
+                        com.forzagundem.socialcanvas.data.TemplateType.BOS -> {
+                            drawRect(Brush.verticalGradient(listOf(Color(0xFF22212A), Color(0xFF111116))))
+                            drawCircle(gold.copy(alpha = .12f), w * .42f, androidx.compose.ui.geometry.Offset(w, 0f))
+                            drawCircle(red.copy(alpha = .14f), w * .38f, androidx.compose.ui.geometry.Offset(0f, h))
+                        }
+                    }
+                }
             }
             if (state.subjectUri != null) {
                 val focusX = with(density) { previewWidth.toPx() } * (0.5f + state.subjectX)
@@ -265,4 +297,15 @@ private fun TextAlignMode.toCompose(): TextAlign = when (this) {
     TextAlignMode.LEFT -> TextAlign.Start
     TextAlignMode.CENTER -> TextAlign.Center
     TextAlignMode.RIGHT -> TextAlign.End
+}
+
+@Composable
+private fun templateBrush(state: EditorState): Brush = when (state.template) {
+    TemplateType.ALINTI -> Brush.verticalGradient(listOf(Color(0xFFFAF7F0), Color(0xFFF0E9DC)))
+    TemplateType.ISTATISTIK -> Brush.verticalGradient(listOf(Color(0xFFFAFAF8), Color(0xFFF2F1ED)))
+    TemplateType.HABER -> Brush.verticalGradient(listOf(Color(0xFF17191F), Color(0xFF30323A), Color(0xFF111216)))
+    TemplateType.SKOR -> Brush.verticalGradient(listOf(Color(0xFF111820), Color(0xFF26313A), Color(0xFF11151B)))
+    TemplateType.TRANSFER -> Brush.verticalGradient(listOf(Color(0xFF35101F), Color(0xFF100D13), Color(0xFF570D2A)))
+    TemplateType.THREADS -> Brush.verticalGradient(listOf(Color(0xFF20212A), Color(0xFF111217)))
+    TemplateType.BOS -> Brush.verticalGradient(listOf(Color(0xFF22212A), Color(0xFF111116)))
 }
