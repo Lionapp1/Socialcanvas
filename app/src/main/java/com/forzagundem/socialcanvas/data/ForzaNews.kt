@@ -31,23 +31,25 @@ object ForzaNewsRepository {
     private const val PREFS = "forzax_news"
     private const val ITEMS = "articles"
     private const val UPDATED = "updated_at"
-    private const val MAX_FULL_FETCH = 45
-    private const val MIN_SUMMARY_FOR_SKIP = 320
+    private const val MAX_FULL_FETCH = 55
+    private const val MIN_SUMMARY_FOR_SKIP = 280
 
     private val feeds = listOf(
-        Feed("A Spor", "https://www.aspor.com.tr/rss/news.xml", "G\u00fcndem"),
+        Feed("A Spor", "https://www.aspor.com.tr/rss/news.xml", "Gundem"),
         Feed("A Spor Galatasaray", "https://www.aspor.com.tr/rss/galatasaray.xml", "Galatasaray"),
-        Feed("A Spor S\u00fcper Lig", "https://www.aspor.com.tr/rss/spor-toto-super-lig.xml", "S\u00fcper Lig"),
-        Feed("A Spor Milli Tak\u0131m", "https://www.aspor.com.tr/rss/millitakim.xml", "Milli Tak\u0131m"),
-        Feed("A Spor \u015eampiyonlar Ligi", "https://www.aspor.com.tr/rss/sampiyonlar-ligi.xml", "Avrupa"),
+        Feed("A Spor Super Lig", "https://www.aspor.com.tr/rss/spor-toto-super-lig.xml", "Super Lig"),
+        Feed("A Spor Milli Takim", "https://www.aspor.com.tr/rss/millitakim.xml", "Milli Takim"),
+        Feed("A Spor Sampiyonlar Ligi", "https://www.aspor.com.tr/rss/sampiyonlar-ligi.xml", "Avrupa"),
         Feed("A Spor Avrupa Ligi", "https://www.aspor.com.tr/rss/avrupa-ligi.xml", "Avrupa"),
         Feed("TRT Spor", "https://www.trthaber.com/spor_articles.rss", "Spor"),
-        Feed("Habert\u00fcrk", "https://www.haberturk.com/rss/spor.xml", "Spor"),
-        Feed("Sky Sports", "https://www.skysports.com/rss/11095", "D\u00fcnya")
+        Feed("Haberturk", "https://www.haberturk.com/rss/spor.xml", "Spor"),
+        Feed("Sky Sports", "https://www.skysports.com/rss/11095", "Dunya")
     )
     private data class Feed(val source: String, val url: String, val category: String)
 
     private val fullCache = ConcurrentHashMap<String, String>()
+
+    fun sources(): List<String> = feeds.map { it.source }.distinct()
 
     fun cached(context: Context): List<ForzaArticle> = runCatching {
         val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(ITEMS, "[]") ?: "[]"
@@ -72,6 +74,11 @@ object ForzaNewsRepository {
 
     fun lastUpdated(context: Context): Long =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getLong(UPDATED, 0L)
+
+    fun clearCache(context: Context) {
+        fullCache.clear()
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().clear().apply()
+    }
 
     private fun save(context: Context, list: List<ForzaArticle>) {
         val json = JSONArray()
@@ -103,14 +110,14 @@ object ForzaNewsRepository {
         var merged = (collected + previous.values)
             .distinctBy { it.link }
             .sortedByDescending { publishedEpoch(it.publishedAt) }
-            .take(250)
+            .take(280)
 
         merged = merged.map { item ->
             val old = previous[item.link]
             if (old != null && old.fullContent.length > item.fullContent.length) {
                 item.copy(
                     fullContent = old.fullContent,
-                    summary = if (item.summary.length < 80) old.summary else item.summary
+                    summary = if (item.summary.length < 100) old.summary else item.summary
                 )
             } else item
         }
@@ -129,17 +136,17 @@ object ForzaNewsRepository {
     suspend fun ensureFull(context: Context, article: ForzaArticle): ForzaArticle = withContext(Dispatchers.IO) {
         if (article.fullContent.length >= MIN_SUMMARY_FOR_SKIP) return@withContext article
         val cachedText = fullCache[article.link]
-        val full = cachedText ?: runCatching { extractFullArticle(article.link) }.getOrNull()?.takeIf { it.length > 120 }
+        val full = cachedText ?: runCatching { extractFullArticle(article.link) }.getOrNull()?.takeIf { it.length > 100 }
         if (full.isNullOrBlank()) return@withContext article
         fullCache[article.link] = full
         val editorText = toEditorStyle(full)
         val updated = article.copy(
             fullContent = editorText,
-            summary = editorText.take(280).let { if (editorText.length > 280) it + "\u2026" else it }
+            summary = editorText.take(300).let { if (editorText.length > 300) it + "..." else it }
         )
         val all = cached(context).map { if (it.link == updated.link) updated else it }
         if (all.none { it.link == updated.link }) {
-            save(context, (listOf(updated) + all).distinctBy { it.link }.take(250))
+            save(context, (listOf(updated) + all).distinctBy { it.link }.take(280))
         } else {
             save(context, all)
         }
@@ -150,13 +157,13 @@ object ForzaNewsRepository {
         articles.map { article ->
             async(Dispatchers.IO) {
                 val cachedText = fullCache[article.link]
-                val full = cachedText ?: runCatching { extractFullArticle(article.link) }.getOrNull()?.takeIf { it.length > 120 }
+                val full = cachedText ?: runCatching { extractFullArticle(article.link) }.getOrNull()?.takeIf { it.length > 100 }
                 if (!full.isNullOrBlank()) {
                     fullCache[article.link] = full
                     val editorText = toEditorStyle(full)
                     article.copy(
                         fullContent = editorText,
-                        summary = editorText.take(280).let { if (editorText.length > 280) it + "\u2026" else it }
+                        summary = editorText.take(300).let { if (editorText.length > 300) it + "..." else it }
                     )
                 } else article
             }
@@ -165,12 +172,16 @@ object ForzaNewsRepository {
 
     private fun extractFullArticle(url: String): String? {
         val connection = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 10000
-            readTimeout = 14000
+            connectTimeout = 12000
+            readTimeout = 16000
             instanceFollowRedirects = true
-            setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0 Mobile Safari/537.36 ForzaX/1.2")
-            setRequestProperty("Accept", "text/html,application/xhtml+xml")
-            setRequestProperty("Accept-Language", "tr-TR,tr;q=0.9,en;q=0.8")
+            setRequestProperty(
+                "User-Agent",
+                "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
+            )
+            setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            setRequestProperty("Accept-Language", "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7")
+            setRequestProperty("Cache-Control", "no-cache")
         }
         return try {
             val html = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
@@ -188,63 +199,91 @@ object ForzaNewsRepository {
             .replace(Regex("(?is)<style[^>]*>.*?</style>"), " ")
             .replace(Regex("(?is)<noscript[^>]*>.*?</noscript>"), " ")
             .replace(Regex("(?is)<!--.*?-->"), " ")
+            .replace(Regex("(?is)<aside[^>]*>.*?</aside>"), " ")
+            .replace(Regex("(?is)<nav[^>]*>.*?</nav>"), " ")
+            .replace(Regex("(?is)<footer[^>]*>.*?</footer>"), " ")
+            .replace(Regex("(?is)<header[^>]*>.*?</header>"), " ")
+
+        Regex("(?is)\"articleBody\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"").find(html)?.let { m ->
+            val body = m.groupValues[1]
+                .replace("\\n", "\n")
+                .replace("\\\"", "\"")
+                .replace("\\/", "/")
+                .stripHtml()
+            if (body.length > 200) return toEditorStyle(body)
+        }
 
         val candidates = listOf(
             Regex("(?is)<article[^>]*>(.*?)</article>"),
-            Regex("(?is)<div[^>]*class=[\"'][^\"']*(?:article-body|news-content|haber-metni|detail-content|content-body|story-body|entry-content|post-content|news-detail|haberDetay|news-text)[^\"']*[\"'][^>]*>(.*?)</div>"),
-            Regex("(?is)<div[^>]*id=[\"'](?:content|article|haber|news|news-body|article-content)[\"'][^>]*>(.*?)</div>")
+            Regex("(?is)<div[^>]*class=[\"'][^\"']*(?:article-body|news-content|haber-metni|detail-content|content-body|story-body|entry-content|post-content|news-detail|haberDetay|news-text|article__body|content__body|spot-content)[^\"']*[\"'][^>]*>(.*?)</div>"),
+            Regex("(?is)<div[^>]*id=[\"'](?:content|article|haber|news|news-body|article-content|haberMetni)[\"'][^>]*>(.*?)</div>"),
+            Regex("(?is)<section[^>]*class=[\"'][^\"']*(?:article|content|haber)[^\"']*[\"'][^>]*>(.*?)</section>")
         )
 
         var bodyHtml: String? = null
         for (rx in candidates) {
             val m = rx.find(clean)
-            if (m != null && m.groupValues.last().length > 200) {
+            if (m != null && m.groupValues.last().length > 180) {
                 bodyHtml = m.groupValues.last()
                 break
             }
         }
-        if (bodyHtml == null) bodyHtml = clean
 
-        val paragraphs = Regex("(?is)<p[^>]*>(.*?)</p>")
-            .findAll(bodyHtml)
+        fun parasFrom(src: String): List<String> = Regex("(?is)<p[^>]*>(.*?)</p>")
+            .findAll(src)
             .map { it.groupValues[1].stripHtml() }
-            .filter { it.length > 40 }
+            .filter { it.length > 45 }
             .filterNot { isNoise(it) }
             .toList()
 
-        if (paragraphs.isEmpty()) {
-            val plain = bodyHtml.stripHtml()
-            return if (plain.length > 180) plain else null
+        val fromBody = bodyHtml?.let { parasFrom(it) }.orEmpty()
+        val fromAll = parasFrom(clean)
+
+        val paragraphs = when {
+            fromBody.size >= 2 -> fromBody
+            fromAll.size >= 2 -> fromAll
+            fromBody.isNotEmpty() -> fromBody
+            else -> fromAll
         }
-        return paragraphs.joinToString("\n\n")
+
+        if (paragraphs.isNotEmpty()) return paragraphs.joinToString("\n\n")
+
+        val brText = (bodyHtml ?: clean)
+            .replace(Regex("(?is)<br\\s*/?>"), "\n")
+            .stripHtml()
+        if (brText.length > 200) return toEditorStyle(brText)
+
+        val meta = Regex("(?is)<meta[^>]+(?:name|property)=[\"'](?:description|og:description)[\"'][^>]+content=[\"']([^\"']+)[\"']")
+            .find(html)?.groupValues?.get(1)?.stripHtml()
+        return if (!meta.isNullOrBlank() && meta.length > 80) meta else null
     }
 
     private fun isNoise(text: String): Boolean {
-        val lower = text.lowercase(Locale("tr"))
+        val lower = text.lowercase(Locale.ROOT)
         val noise = listOf(
-            "cookie", "\u00e7erez", "abone ol", "reklam", "advertisement",
-            "t\u0131klay\u0131n", "detayl\u0131 bilgi", "whatsapp", "telegram kanal",
-            "uygulamam\u0131z\u0131 indir", "bizi takip edin", "gizlilik politikas\u0131",
-            "ileti\u015fim formu", "e-b\u00fclten", "newsletter", "copyright"
+            "cookie", "cerez", "abone ol", "reklam", "advertisement", "subscribe",
+            "tiklayin", "detayli bilgi", "whatsapp", "telegram", "facebook", "twitter",
+            "uygulamamizi indir", "bizi takip", "gizlilik", "newsletter", "copyright",
+            "ilgili haberler", "benzer haberler", "yorum yap", "paylas", "share this"
         )
         return noise.any { lower.contains(it) } || text.length < 35
     }
 
     private fun toEditorStyle(raw: String): String {
         val cleaned = raw.replace(Regex("[ \\t]+"), " ").replace(Regex("\\n{3,}"), "\n\n").trim()
-        return if (cleaned.length > 5000) {
-            val cut = cleaned.take(4600)
+        return if (cleaned.length > 8000) {
+            val cut = cleaned.take(7500)
             val lastDot = cut.lastIndexOf('.')
-            if (lastDot > 3200) cut.take(lastDot + 1) else cut + "\u2026"
+            if (lastDot > 5000) cut.take(lastDot + 1) else cut + "..."
         } else cleaned
     }
 
     private fun readFeed(feed: Feed): List<ForzaArticle> {
         val connection = (URL(feed.url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 9000
-            readTimeout = 12000
-            setRequestProperty("User-Agent", "ForzaX/1.2 (Android news reader)")
-            setRequestProperty("Accept", "application/rss+xml, application/atom+xml, application/xml, text/xml")
+            connectTimeout = 10000
+            readTimeout = 14000
+            setRequestProperty("User-Agent", "ForzaX/1.6 (Android news reader)")
+            setRequestProperty("Accept", "application/rss+xml, application/atom+xml, application/xml, text/xml, */*")
         }
         return try {
             connection.inputStream.use { input ->
@@ -257,6 +296,7 @@ object ForzaNewsRepository {
                 var inItem = false
                 var title = ""
                 var description = ""
+                var encoded = ""
                 var link = ""
                 var image: String? = null
                 var date = ""
@@ -265,25 +305,29 @@ object ForzaNewsRepository {
                     when (event) {
                         XmlPullParser.START_TAG -> {
                             val tag = parser.name.lowercase(Locale.ROOT)
+                            val local = parser.name.substringAfterLast(':').lowercase(Locale.ROOT)
                             if (tag == "item" || tag == "entry") {
                                 inItem = true
-                                title = ""; description = ""; link = ""; image = null; date = ""
+                                title = ""; description = ""; encoded = ""; link = ""; image = null; date = ""
                             } else if (inItem) {
-                                when (tag) {
-                                    "title" -> title = parser.nextText().stripHtml()
-                                    "description", "summary", "encoded" -> {
-                                        if (description.isBlank()) description = parser.nextText().stripHtml()
+                                when {
+                                    tag == "title" || local == "title" -> title = parser.nextText().stripHtml()
+                                    local == "encoded" || tag.endsWith("encoded") -> encoded = parser.nextText()
+                                    tag == "description" || tag == "summary" || local == "description" -> {
+                                        val t = parser.nextText()
+                                        if (description.isBlank()) description = t
                                     }
-                                    "link" -> {
+                                    tag == "link" || local == "link" -> {
                                         val href = parser.getAttributeValue(null, "href")
                                         link = href ?: parser.nextText()
                                     }
-                                    "pubdate", "published", "updated" -> date = parser.nextText()
-                                    "thumbnail", "content", "enclosure" -> {
+                                    tag == "pubdate" || tag == "published" || tag == "updated" || local == "pubdate" ->
+                                        date = parser.nextText()
+                                    tag == "thumbnail" || tag == "content" || tag == "enclosure" || local == "thumbnail" -> {
                                         val u = parser.getAttributeValue(null, "url") ?: parser.getAttributeValue(null, "href")
                                         if (!u.isNullOrBlank() && (tag != "content" || parser.getAttributeValue(null, "medium") == "image")) image = u
                                     }
-                                    "image" -> image = parser.nextText().trim()
+                                    tag == "image" -> image = parser.nextText().trim()
                                 }
                             }
                         }
@@ -291,11 +335,15 @@ object ForzaNewsRepository {
                             if (parser.name.equals("item", true) || parser.name.equals("entry", true)) {
                                 inItem = false
                                 if (title.isNotBlank() && link.startsWith("http")) {
-                                    val short = description.take(280)
+                                    val rich = if (encoded.length > description.length) encoded else description
+                                    val plain = rich.stripHtml()
+                                    val short = plain.take(300)
+                                    val fullSeed = if (plain.length > 400) toEditorStyle(plain) else short
+                                    val img = image ?: Regex("(?is)<img[^>]+src=[\"']([^\"']+)[\"']").find(rich)?.groupValues?.get(1)
                                     result += ForzaArticle(
-                                        id = link, title = title, summary = short, fullContent = short,
+                                        id = link, title = title, summary = short, fullContent = fullSeed,
                                         link = link, source = feed.source, category = feed.category,
-                                        imageUrl = image, publishedAt = date
+                                        imageUrl = img, publishedAt = date
                                     )
                                 }
                             }
@@ -331,8 +379,12 @@ object ForzaNewsRepository {
             .replace(amp + "amp;", amp)
             .replace(amp + "quot;", "\"")
             .replace(amp + "#39;", "'")
+            .replace(amp + "apos;", "'")
             .replace(amp + "lt;", "<")
             .replace(amp + "gt;", ">")
+            .replace(Regex(amp + "#(\\d+);")) { m ->
+                m.groupValues[1].toIntOrNull()?.toChar()?.toString() ?: " "
+            }
             .replace(Regex("\\s+"), " ")
             .trim()
     }
