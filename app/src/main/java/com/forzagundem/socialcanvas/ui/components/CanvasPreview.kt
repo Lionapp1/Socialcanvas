@@ -217,7 +217,7 @@ fun CanvasPreview(
             Text(
                 "forzagundem",
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
-                color = if (light) Color(0xFF8F1538).copy(alpha = .72f) else Color.White.copy(alpha = .72f),
+                color = Color.White.copy(alpha = .78f),
                 fontSize = 8.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp
             )
 
