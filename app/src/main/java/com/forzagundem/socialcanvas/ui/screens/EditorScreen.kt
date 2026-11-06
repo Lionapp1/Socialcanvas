@@ -200,6 +200,20 @@ fun EditorScreen(initialTemplate: TemplateType, onBack: () -> Unit) {
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
+                SectionLabel("ŞABLONLAR")
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TemplateType.entries.filter { it != TemplateType.BOS }.forEach { template ->
+                        RatioChip("${template.iconEmoji} ${template.title}", state.template == template) {
+                            state = state.copy(
+                                template = template,
+                                headline = template.defaultHeadline,
+                                subtitle = template.defaultSub
+                            ).applyProfessionalLayout()
+                            assistantNote = "${template.title} şablonu seçildi. Başlık, açıklama, renkler ve yerleşim otomatik ayarlandı."
+                        }
+                    }
+                }
+                Spacer(Modifier.height(18.dp))
                 SectionLabel("AI TASARIM ASİSTANI")
                 AppTextField(
                     value = assistantText,
