@@ -28,21 +28,61 @@ object DesignExporter {
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
-        val editorial = state.designStyle == DesignStyle.EDITORIAL_LIGHT && state.imageUri == null
-        paint.shader = if (editorial) null else LinearGradient(0f, 0f, 0f, height.toFloat(), Color.rgb(25, 25, 25), Color.rgb(8, 8, 8), Shader.TileMode.CLAMP)
-        paint.color = if (editorial) Color.rgb(250, 250, 248) else Color.rgb(25, 25, 25)
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-        paint.shader = null
-        if (editorial) {
-            paint.color = Color.argb(34, 143, 21, 56)
-            canvas.drawCircle(width * 0.92f, height * 0.08f, min(width, height) * 0.20f, paint)
-            paint.color = Color.argb(20, 242, 181, 27)
-            canvas.drawCircle(width * 0.06f, height * 0.90f, min(width, height) * 0.13f, paint)
-            paint.color = Color.rgb(143, 21, 56)
-            paint.strokeWidth = 5f
-            canvas.drawLine(width * 0.08f, height * 0.12f, width * 0.34f, height * 0.12f, paint)
-            paint.color = Color.rgb(242, 181, 27)
-            canvas.drawLine(width * 0.66f, height * 0.12f, width * 0.92f, height * 0.12f, paint)
+        val editorial = (state.template == TemplateType.ISTATISTIK || state.template == TemplateType.ALINTI) && state.imageUri == null
+        if (state.imageUri == null) {
+            val colors = when (state.template) {
+                TemplateType.ALINTI -> intArrayOf(Color.rgb(250, 247, 240), Color.rgb(240, 233, 220))
+                TemplateType.ISTATISTIK -> intArrayOf(Color.rgb(250, 250, 248), Color.rgb(242, 241, 237))
+                TemplateType.HABER -> intArrayOf(Color.rgb(23, 25, 31), Color.rgb(48, 50, 58), Color.rgb(17, 18, 22))
+                TemplateType.SKOR -> intArrayOf(Color.rgb(17, 24, 32), Color.rgb(38, 49, 58), Color.rgb(17, 21, 27))
+                TemplateType.TRANSFER -> intArrayOf(Color.rgb(53, 16, 31), Color.rgb(16, 13, 19), Color.rgb(87, 13, 42))
+                TemplateType.THREADS -> intArrayOf(Color.rgb(32, 33, 42), Color.rgb(17, 18, 23))
+                TemplateType.BOS -> intArrayOf(Color.rgb(34, 33, 42), Color.rgb(17, 17, 22))
+            }
+            paint.shader = LinearGradient(0f, 0f, 0f, height.toFloat(), colors, null, Shader.TileMode.CLAMP)
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+            paint.shader = null
+            paint.style = Paint.Style.FILL
+            if (editorial) {
+                paint.color = Color.argb(34, 143, 21, 56)
+                canvas.drawCircle(width * 0.96f, height * 0.08f, min(width, height) * 0.34f, paint)
+                paint.color = Color.argb(20, 242, 181, 27)
+                canvas.drawCircle(width * 0.02f, height * 0.92f, min(width, height) * 0.22f, paint)
+                paint.color = Color.rgb(143, 21, 56)
+                paint.strokeWidth = 5f
+                canvas.drawLine(width * 0.08f, height * 0.13f, width * 0.34f, height * 0.13f, paint)
+                paint.color = Color.rgb(242, 181, 27)
+                canvas.drawLine(width * 0.66f, height * 0.13f, width * 0.92f, height * 0.13f, paint)
+            } else {
+                paint.color = Color.argb(45, 255, 255, 255)
+                paint.strokeWidth = 3f
+                when (state.template) {
+                    TemplateType.TRANSFER -> {
+                        for (i in 0..5) canvas.drawLine(width * (0.48f + i * .10f), 0f, width * (0.18f + i * .10f), height.toFloat(), paint)
+                        paint.color = Color.rgb(143, 21, 56)
+                        canvas.drawRect(width * .07f, height * .12f, width * .09f, height * .74f, paint)
+                    }
+                    TemplateType.HABER -> {
+                        paint.color = Color.rgb(143, 21, 56)
+                        canvas.drawRect(0f, 0f, width.toFloat(), height * .018f, paint)
+                        paint.color = Color.rgb(242, 181, 27)
+                        canvas.drawRect(width * .08f, height * .17f, width * .92f, height * .174f, paint)
+                    }
+                    TemplateType.SKOR -> {
+                        paint.color = Color.argb(24, 255, 255, 255)
+                        canvas.drawRoundRect(RectF(width * .08f, height * .37f, width * .92f, height * .64f), 36f, 36f, paint)
+                    }
+                    TemplateType.THREADS -> {
+                        paint.color = Color.argb(18, 255, 255, 255)
+                        canvas.drawRoundRect(RectF(width * .07f, height * .14f, width * .93f, height * .84f), 42f, 42f, paint)
+                    }
+                    else -> Unit
+                }
+            }
+        } else {
+            paint.shader = LinearGradient(0f, 0f, 0f, height.toFloat(), Color.rgb(25, 25, 25), Color.rgb(8, 8, 8), Shader.TileMode.CLAMP)
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+            paint.shader = null
         }
 
         state.imageUri?.let { raw ->
