@@ -34,9 +34,9 @@ object DesignAssistant {
 
         val lines = source.lines().map { it.trim() }.filter { it.isNotBlank() }
         val firstLine = lines.firstOrNull().orEmpty()
-        val sentences = firstLine.split(Regex("(?<=[.!?;])\\\\s+|\\\\s+[•|]\\\\s+"))
+        val sentences = firstLine.split(Regex("(?<=[.!?;])\\s+|\\s+[•|]\\s+"))
             .map { it.trim().trimEnd('.', ';') }.filter { it.isNotBlank() }
-        val score = Regex("\\\\b([0-9]{1,2})\\\\s*[-:]\\\\s*([0-9]{1,2})\\\\b").find(source)
+        val score = Regex("\\b([0-9]{1,2})\\s*[-:]\\s*([0-9]{1,2})\\b").find(source)
         val scoreTail = if (score != null) firstLine.substring(score.range.last + 1).trim().trimStart(',', ':', ' ') else ""
         val scoreTailParts = scoreTail.split(',').map { it.trim() }.filter { it.isNotBlank() }
         val title = when {
@@ -106,12 +106,12 @@ object DesignAssistant {
         }
 
         val explanation = when (template) {
-            TemplateType.TRANSFER -> "Transfer dili algılandı. Güçlü başlık, koyu fotoğraf ve futbol duyurusu düzeni seçildi."
-            TemplateType.SKOR -> "Skor veya maç sonucu algılandı. Skoru öne çıkaran merkezî maç kartı seçildi."
-            TemplateType.ISTATISTIK -> "Sayısal veri algılandı. İnfografik düzeni ve veri çubukları seçildi."
-            TemplateType.HABER -> "Haber dili algılandı. Son dakika / haber başlığı için editoryal düzen seçildi."
-            TemplateType.ALINTI -> "Alıntı metni algılandı. Sözü öne çıkaran tipografik kart seçildi."
-            TemplateType.THREADS -> "Sosyal paylaşım metni algılandı. Threads uyumlu sade ve okunaklı düzen seçildi."
+            TemplateType.TRANSFER -> "Transfer içeriği algılandı. Aslan silüetli bordo-altın duyuru düzeni seçildi."
+            TemplateType.SKOR -> "Skor veya maç sonucu algılandı. Skor ve maç bilgileri ayrı hiyerarşide düzenlendi."
+            TemplateType.ISTATISTIK -> "Sayısal veri algılandı. Veriler ve yüzde değerleri infografik düzenine aktarıldı."
+            TemplateType.HABER -> "Haber dili algılandı. Başlık, spot ve editoryal vurgu otomatik düzenlendi."
+            TemplateType.ALINTI -> "Alıntı metni algılandı. Sade, ferah ve tipografik kart seçildi."
+            TemplateType.THREADS -> "Sosyal paylaşım metni algılandı. Okunabilirlik odaklı modern paylaşım düzeni seçildi."
             TemplateType.BOS -> "Boş tuval seçildi."
         }
         return AssistantPlan(planned, explanation, template.title)
