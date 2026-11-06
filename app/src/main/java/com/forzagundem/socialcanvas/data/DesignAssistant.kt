@@ -53,7 +53,7 @@ object DesignAssistant {
             TemplateType.THREADS -> AspectRatio.THREADS_45
             else -> AspectRatio.INSTAGRAM_45
         }
-        val percentages = Regex("(\\\\d{1,3})\\\\s*%").findAll(source)
+        val percentages = Regex("(\\d{1,3})\\s*%").findAll(source)
             .mapNotNull { it.groupValues.getOrNull(1)?.toFloatOrNull()?.div(100f) }
             .map { it.coerceIn(0.02f, 1f) }.toList()
         val planned = EditorState(
