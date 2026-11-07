@@ -1,9 +1,12 @@
 package com.forzagundem.socialcanvas.ui.screens
 
 import android.content.Intent
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -20,15 +23,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Explore
-import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
@@ -36,6 +42,9 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.SportsSoccer
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.TextFields
+import androidx.compose.material.icons.outlined.VolumeOff
+import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -63,14 +72,26 @@ import java.util.Locale
 private val categories = listOf("Tumu", "Galatasaray", "Milli Takim", "Super Lig", "Transfer", "Avrupa", "Son Dakika")
 private const val PREFS = "forzax_reader"
 private const val SAVED_IDS = "saved_article_ids"
+private const val KEY_SOUND = "click_sound"
+private const val KEY_FONT = "font_scale"
 private val Red = Color(0xFFE11D36)
-private val RedDark = Color(0xFF8D1028)
+private val RedDark = Color(0xFF9B1224)
 private val ChipBg = Color(0xFF1A1D28)
+
+private fun playClick(enabled: Boolean) {
+    if (!enabled) return
+    runCatching {
+        val tg = ToneGenerator(AudioManager.STREAM_MUSIC, 35)
+        tg.startTone(ToneGenerator.TONE_PROP_BEEP, 40)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ tg.release() }, 80)
+    }
+}
 
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val prefs = remember { context.getSharedPreferences(PREFS, 0) }
     var articles by remember { mutableStateOf(ForzaNewsRepository.cached(context)) }
     var selected by remember { mutableStateOf("Tumu") }
     var tab by remember { mutableIntStateOf(0) }
@@ -80,8 +101,12 @@ fun HomeScreen() {
     var query by remember { mutableStateOf("") }
     var openedArticle by remember { mutableStateOf<ForzaArticle?>(null) }
     var savedIds by remember {
-        mutableStateOf(context.getSharedPreferences(PREFS, 0).getStringSet(SAVED_IDS, emptySet())?.toSet() ?: emptySet())
+        mutableStateOf(prefs.getStringSet(SAVED_IDS, emptySet())?.toSet() ?: emptySet())
     }
+    var soundOn by remember { mutableStateOf(prefs.getBoolean(KEY_SOUND, true)) }
+    var fontScale by remember { mutableFloatStateOf(prefs.getFloat(KEY_FONT, 1f)) }
+
+    fun click() = playClick(soundOn)
 
     fun refresh() {
         if (loading) return
@@ -97,12 +122,14 @@ fun HomeScreen() {
     }
 
     fun toggleSaved(article: ForzaArticle) {
+        click()
         val next = if (article.id in savedIds) savedIds - article.id else savedIds + article.id
         savedIds = next
-        context.getSharedPreferences(PREFS, 0).edit().putStringSet(SAVED_IDS, next).apply()
+        prefs.edit().putStringSet(SAVED_IDS, next).apply()
     }
 
     fun openArticle(article: ForzaArticle) {
+        click()
         openedArticle = article
         scope.launch {
             val full = runCatching { ForzaNewsRepository.ensureFull(context, article) }.getOrDefault(article)
@@ -112,6 +139,7 @@ fun HomeScreen() {
     }
 
     fun shareArticle(article: ForzaArticle) {
+        click()
         val text = "${article.title}\n\n${article.summary.take(180)}\n\n${article.link}\n\nForzaX"
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
@@ -125,21 +153,22 @@ fun HomeScreen() {
     BackHandler(enabled = openedArticle != null) { openedArticle = null }
 
     val filtered = articles.filter { article ->
-        val text = "${article.title} ${article.summary} ${article.fullContent} ${article.category}"
+        val text = "${article.title} ${article.summary} ${article.fullContent} ${article.category} ${article.source}"
         val categoryMatch = when (selected) {
-            "Galatasaray" -> listOf("galatasaray", "okan buruk").any { text.contains(it, true) } ||
-                article.category.contains("Galatasaray", true)
-            "Milli Takim" -> listOf("milli takim", "milli takım", "turkiye", "türkiye", "a milli").any { text.contains(it, true) } ||
-                article.category.contains("Milli", true)
-            "Super Lig" -> listOf("super lig", "fenerbahce", "besiktas", "trabzonspor", "basaksehir").any { text.contains(it, true) } ||
+            "Galatasaray" -> listOf("galatasaray", "gala", "okan buruk", "icardi", "muslera").any { text.contains(it, true) } ||
+                article.category.contains("Galatasaray", true) || article.source.contains("Galatasaray", true)
+            "Milli Takim" -> listOf("milli takim", "milli takım", "a milli", "turkiye", "türkiye", "montella", "uefa").any { text.contains(it, true) } ||
+                article.category.contains("Milli", true) || article.source.contains("Milli", true)
+            "Super Lig" -> listOf("super lig", "süper lig", "fenerbahce", "besiktas", "trabzonspor", "basaksehir").any { text.contains(it, true) } ||
                 article.category.contains("Super", true)
-            "Transfer" -> listOf("transfer", "imza", "anlasma", "kiralik", "bonservis").any { text.contains(it, true) }
-            "Avrupa" -> article.category == "Dunya" || article.category == "Avrupa" ||
-                listOf("sampiyonlar", "premier league", "la liga", "serie a").any { text.contains(it, true) }
-            "Son Dakika" -> listOf("son dakika", "resmi aciklama", "acil").any { text.contains(it, true) }
+            "Transfer" -> listOf("transfer", "imza", "anlasma", "kiralik", "bonservis", "teklif").any { text.contains(it, true) }
+            "Avrupa" -> article.category.contains("Avrupa", true) || article.category.contains("Dunya", true) ||
+                listOf("sampiyonlar", "premier", "la liga", "serie a", "bundesliga").any { text.contains(it, true) }
+            "Son Dakika" -> listOf("son dakika", "resmi", "acil", "breaking").any { text.contains(it, true) }
             else -> true
         }
-        categoryMatch && (query.isBlank() || text.contains(query, true))
+        val q = query.trim()
+        categoryMatch && (q.isBlank() || text.contains(q, true))
     }
 
     Box(Modifier.fillMaxSize().background(Bg)) {
@@ -147,6 +176,7 @@ fun HomeScreen() {
             ReaderScreen(
                 article = openedArticle!!,
                 saved = openedArticle!!.id in savedIds,
+                fontScale = fontScale,
                 onBack = { openedArticle = null },
                 onSave = { toggleSaved(openedArticle!!) },
                 onShare = { shareArticle(openedArticle!!) },
@@ -160,17 +190,20 @@ fun HomeScreen() {
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     when (tab) {
                         0 -> FeedPage(
-                            articles = filtered, selected = selected, onSelectCategory = { selected = it },
-                            searchMode = searchMode, onToggleSearch = { searchMode = !searchMode },
-                            query = query, onQuery = { query = it }, loading = loading, updated = updated,
-                            savedIds = savedIds, onRefresh = { refresh() },
+                            articles = filtered, selected = selected,
+                            onSelectCategory = { click(); selected = it },
+                            searchMode = searchMode,
+                            onToggleSearch = { click(); searchMode = !searchMode; if (!searchMode) query = "" },
+                            query = query, onQuery = { query = it },
+                            loading = loading, updated = updated, savedIds = savedIds,
+                            onRefresh = { click(); refresh() },
                             onOpen = { openArticle(it) }, onSave = { toggleSaved(it) }
                         )
                         1 -> DiscoverPage(
-                            articles = articles, sources = ForzaNewsRepository.sources(),
+                            articles = articles,
                             onOpen = { openArticle(it) },
-                            onCategory = { c -> selected = c; tab = 0 },
-                            onSource = { s -> query = s; searchMode = true; tab = 0 }
+                            onCategory = { c -> click(); selected = c; tab = 0 },
+                            onSource = { s -> click(); query = s; searchMode = true; tab = 0 }
                         )
                         2 -> SavedPage(
                             articles = articles.filter { it.id in savedIds },
@@ -179,28 +212,38 @@ fun HomeScreen() {
                         3 -> SettingsPage(
                             articleCount = articles.size, savedCount = savedIds.size,
                             updated = updated, loading = loading,
-                            onRefresh = { refresh() },
+                            soundOn = soundOn, fontScale = fontScale,
+                            onSound = {
+                                soundOn = it
+                                prefs.edit().putBoolean(KEY_SOUND, it).apply()
+                                if (it) playClick(true)
+                            },
+                            onFont = {
+                                fontScale = it
+                                prefs.edit().putFloat(KEY_FONT, it).apply()
+                            },
+                            onRefresh = { click(); refresh() },
                             onClear = {
+                                click()
                                 ForzaNewsRepository.clearCache(context)
                                 articles = emptyList()
                                 savedIds = emptySet()
-                                context.getSharedPreferences(PREFS, 0).edit().clear().apply()
+                                prefs.edit().remove(SAVED_IDS).apply()
                                 updated = 0L
                             }
                         )
                     }
                 }
-
                 NavigationBar(
                     containerColor = Surface,
                     contentColor = TextPrimary,
                     tonalElevation = 0.dp,
                     modifier = Modifier.fillMaxWidth().navigationBarsPadding()
                 ) {
-                    NavItem(tab == 0, Icons.Outlined.Home, "Akis") { tab = 0 }
-                    NavItem(tab == 1, Icons.Outlined.Explore, "Kesfet") { tab = 1; searchMode = false }
-                    NavItem(tab == 2, if (tab == 2) Icons.Outlined.Bookmark else Icons.Outlined.BookmarkBorder, "Kayitlar") { tab = 2 }
-                    NavItem(tab == 3, Icons.Outlined.Settings, "Ayarlar") { tab = 3 }
+                    AnimatedNavItem(tab == 0, if (tab == 0) Icons.Filled.Home else Icons.Outlined.Home, "Akis") { click(); tab = 0 }
+                    AnimatedNavItem(tab == 1, if (tab == 1) Icons.Filled.Explore else Icons.Outlined.Explore, "Kesfet") { click(); tab = 1; searchMode = false }
+                    AnimatedNavItem(tab == 2, if (tab == 2) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, "Kayitlar") { click(); tab = 2 }
+                    AnimatedNavItem(tab == 3, if (tab == 3) Icons.Filled.Settings else Icons.Outlined.Settings, "Ayarlar") { click(); tab = 3 }
                 }
             }
         }
@@ -208,16 +251,21 @@ fun HomeScreen() {
 }
 
 @Composable
-private fun RowScope.NavItem(selected: Boolean, icon: ImageVector, label: String, onClick: () -> Unit) {
+private fun RowScope.AnimatedNavItem(selected: Boolean, icon: ImageVector, label: String, onClick: () -> Unit) {
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1.12f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "nav"
+    )
     NavigationBarItem(
         selected = selected,
         onClick = onClick,
-        icon = { Icon(icon, contentDescription = label) },
+        icon = { Icon(icon, contentDescription = label, modifier = Modifier.scale(scale).size(24.dp)) },
         label = { Text(label, fontSize = 11.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium) },
         colors = NavigationBarItemDefaults.colors(
-            selectedIconColor = Red,
-            selectedTextColor = Red,
-            indicatorColor = Red.copy(alpha = 0.15f),
+            selectedIconColor = Gold,
+            selectedTextColor = Gold,
+            indicatorColor = Red.copy(alpha = 0.18f),
             unselectedIconColor = TextMuted,
             unselectedTextColor = TextMuted
         )
@@ -229,17 +277,15 @@ private fun PressScale(modifier: Modifier = Modifier, onClick: () -> Unit, conte
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = 0.65f, stiffness = 500f),
+        targetValue = if (pressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 600f),
         label = "press"
     )
-    Box(
-        modifier = modifier.scale(scale).clickable(interactionSource = interaction, indication = null, onClick = onClick)
-    ) { content() }
+    Box(modifier = modifier.scale(scale).clickable(interactionSource = interaction, indication = null, onClick = onClick)) { content() }
 }
 
 @Composable
-private fun TopBar(subtitle: String, loading: Boolean, onSearch: (() -> Unit)?, onRefresh: (() -> Unit)?) {
+private fun TopBar(title: String, subtitle: String, loading: Boolean = false, onSearch: (() -> Unit)? = null, onRefresh: (() -> Unit)? = null) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Brush.linearGradient(listOf(Red, RedDark))),
@@ -247,8 +293,8 @@ private fun TopBar(subtitle: String, loading: Boolean, onSearch: (() -> Unit)?, 
         ) { Icon(Icons.Outlined.SportsSoccer, null, tint = Color.White, modifier = Modifier.size(22.dp)) }
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
-            Text("ForzaX", color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Black, letterSpacing = (-0.6).sp)
-            Text(subtitle, color = Red, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.8.sp)
+            Text(title, color = TextPrimary, fontSize = 21.sp, fontWeight = FontWeight.Black, letterSpacing = (-0.5).sp)
+            Text(subtitle, color = Gold, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.6.sp)
         }
         if (onSearch != null) IconButton(onClick = onSearch) { Icon(Icons.Outlined.Search, contentDescription = "Ara", tint = TextPrimary) }
         if (onRefresh != null) IconButton(onClick = onRefresh, enabled = !loading) {
@@ -266,16 +312,22 @@ private fun FeedPage(
     onOpen: (ForzaArticle) -> Unit, onSave: (ForzaArticle) -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
-        TopBar("SPORUN NABZI", loading, onToggleSearch, onRefresh)
+        TopBar("ForzaX", "SPORUN NABZI", loading, onToggleSearch, onRefresh)
         if (searchMode) {
             OutlinedTextField(
                 value = query, onValueChange = onQuery,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                placeholder = { Text("Haber, takim veya konu ara") }, singleLine = true,
-                shape = RoundedCornerShape(16.dp),
+                placeholder = { Text("Galatasaray, milli takim, transfer...") },
+                singleLine = true, shape = RoundedCornerShape(16.dp),
+                leadingIcon = { Icon(Icons.Outlined.Search, null, tint = TextMuted) },
+                trailingIcon = {
+                    if (query.isNotBlank()) IconButton(onClick = { onQuery("") }) {
+                        Icon(Icons.Outlined.Close, null, tint = TextMuted)
+                    }
+                },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Red, unfocusedBorderColor = Border,
-                    focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, cursorColor = Red
+                    focusedBorderColor = Gold, unfocusedBorderColor = Border,
+                    focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, cursorColor = Gold
                 )
             )
             Spacer(Modifier.height(8.dp))
@@ -288,8 +340,9 @@ private fun FeedPage(
                 val active = selected == category
                 PressScale(onClick = { onSelectCategory(category) }) {
                     Box(
-                        Modifier.clip(RoundedCornerShape(20.dp)).background(if (active) Red else ChipBg)
-                            .border(1.dp, if (active) Red else Border, RoundedCornerShape(20.dp))
+                        Modifier.clip(RoundedCornerShape(20.dp))
+                            .background(if (active) Brush.horizontalGradient(listOf(Red, RedDark)) else Brush.horizontalGradient(listOf(ChipBg, ChipBg)))
+                            .border(1.dp, if (active) Gold.copy(alpha = 0.5f) else Border, RoundedCornerShape(20.dp))
                             .padding(horizontal = 14.dp, vertical = 8.dp)
                     ) {
                         Text(category, color = if (active) Color.White else TextSecondary, fontSize = 12.sp,
@@ -305,7 +358,7 @@ private fun FeedPage(
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.width(3.dp).height(16.dp).clip(CircleShape).background(Red))
+                    Box(Modifier.width(3.dp).height(16.dp).clip(CircleShape).background(Gold))
                     Spacer(Modifier.width(8.dp))
                     Text(if (selected == "Tumu") "GUNDEM" else selected.uppercase(Locale.ROOT),
                         color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 1.2.sp)
@@ -334,28 +387,35 @@ private fun FeedPage(
 
 @Composable
 private fun DiscoverPage(
-    articles: List<ForzaArticle>, sources: List<String>,
-    onOpen: (ForzaArticle) -> Unit, onCategory: (String) -> Unit, onSource: (String) -> Unit
+    articles: List<ForzaArticle>,
+    onOpen: (ForzaArticle) -> Unit,
+    onCategory: (String) -> Unit,
+    onSource: (String) -> Unit
 ) {
-    val topics = listOf(
-        "Galatasaray" to Icons.Outlined.SportsSoccer,
-        "Milli Takim" to Icons.Outlined.Flag,
-        "Transfer" to Icons.Outlined.Sync,
-        "Avrupa" to Icons.Outlined.Explore
+    val teams = listOf(
+        Triple("Galatasaray", "GS", Color(0xFFFFC107)),
+        Triple("Milli Takim", "TR", Color(0xFFE11D36)),
+        Triple("Transfer", "TR", Gold),
+        Triple("Avrupa", "EU", Color(0xFF3B82F6))
     )
+    val sources = ForzaNewsRepository.sources()
     Column(Modifier.fillMaxSize()) {
-        TopBar("KESFET", false, null, null)
+        TopBar("ForzaX", "KESFET")
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item { Text("KONULAR", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 1.1.sp) }
+            item { Text("TAKIMLAR VE KONULAR", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 1.1.sp) }
             item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    topics.forEach { (name, icon) ->
+                    teams.forEach { (name, badge, color) ->
                         PressScale(modifier = Modifier.weight(1f), onClick = { onCategory(name) }) {
                             Column(
                                 Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Card).padding(12.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(icon, null, tint = Gold, modifier = Modifier.size(22.dp))
+                                Box(
+                                    Modifier.size(40.dp).clip(CircleShape).background(color.copy(alpha = 0.2f))
+                                        .border(1.5.dp, color, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) { Text(badge, color = color, fontWeight = FontWeight.Black, fontSize = 13.sp) }
                                 Spacer(Modifier.height(8.dp))
                                 Text(name, color = TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                             }
@@ -371,9 +431,9 @@ private fun DiscoverPage(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
-                            Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Red.copy(alpha = 0.18f)),
+                            Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Red.copy(alpha = 0.16f)),
                             contentAlignment = Alignment.Center
-                        ) { Text(source.take(1), color = Red, fontWeight = FontWeight.Bold) }
+                        ) { Text(source.take(1), color = Gold, fontWeight = FontWeight.Bold) }
                         Spacer(Modifier.width(12.dp))
                         Text(source, color = TextPrimary, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                         Icon(Icons.Outlined.ChevronRight, null, tint = TextMuted, modifier = Modifier.size(18.dp))
@@ -381,7 +441,7 @@ private fun DiscoverPage(
                 }
             }
             item { Text("ONE CIKANLAR", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 1.1.sp) }
-            items(articles.take(8)) { a -> NewsRow(a, false, { onOpen(a) }, {}) }
+            items(articles.take(10)) { a -> NewsRow(a, false, { onOpen(a) }, {}) }
         }
     }
 }
@@ -389,7 +449,7 @@ private fun DiscoverPage(
 @Composable
 private fun SavedPage(articles: List<ForzaArticle>, onOpen: (ForzaArticle) -> Unit, onSave: (ForzaArticle) -> Unit) {
     Column(Modifier.fillMaxSize()) {
-        TopBar("OKUMA LISTEM", false, null, null)
+        TopBar("ForzaX", "OKUMA LISTEM")
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (articles.isEmpty()) item { EmptyCard("Henuz kayitli haber yok") {} }
             else items(articles, key = { it.id }) { a -> NewsRow(a, true, { onOpen(a) }, { onSave(a) }) }
@@ -400,19 +460,60 @@ private fun SavedPage(articles: List<ForzaArticle>, onOpen: (ForzaArticle) -> Un
 @Composable
 private fun SettingsPage(
     articleCount: Int, savedCount: Int, updated: Long, loading: Boolean,
+    soundOn: Boolean, fontScale: Float,
+    onSound: (Boolean) -> Unit, onFont: (Float) -> Unit,
     onRefresh: () -> Unit, onClear: () -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
-        TopBar("AYARLAR", false, null, null)
+        TopBar("ForzaX", "AYARLAR")
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            SettingsCard("Haberler", "$articleCount kayitli haber")
+            Text("GENEL", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            SettingsCard("Haberler", "$articleCount kayit")
             SettingsCard("Okuma listesi", "$savedCount haber")
             SettingsCard("Son senkron", if (updated > 0) timeLabel(updated) else "Henuz yok")
-            SettingsCard("Arka plan", "15 dakikada bir otomatik")
-            SettingsCard("Surum", "ForzaX 1.6.1")
+            SettingsCard("Arka plan", "15 dk otomatik")
+
+            Text("GORUNUM", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Card).padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Outlined.TextFields, null, tint = Gold, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Yazi boyutu", color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                    Text(when {
+                        fontScale < 0.95f -> "Kucuk"
+                        fontScale > 1.1f -> "Buyuk"
+                        else -> "Normal"
+                    }, color = TextMuted, fontSize = 12.sp)
+                }
+            }
+            Slider(
+                value = fontScale, onValueChange = onFont, valueRange = 0.85f..1.25f, steps = 3,
+                colors = SliderDefaults.colors(thumbColor = Gold, activeTrackColor = Red, inactiveTrackColor = Border)
+            )
+
+            Text("SES", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Card).padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(if (soundOn) Icons.Outlined.VolumeUp else Icons.Outlined.VolumeOff, null, tint = if (soundOn) Gold else TextMuted)
+                Spacer(Modifier.width(12.dp))
+                Text("Tiklama sesi", color = TextPrimary, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Switch(
+                    checked = soundOn, onCheckedChange = onSound,
+                    colors = SwitchDefaults.colors(checkedThumbColor = Gold, checkedTrackColor = Red.copy(alpha = 0.5f))
+                )
+            }
+
+            SettingsCard("Surum", "ForzaX 1.7.0")
+            SettingsCard("Tema", "Koyu · Kirmizi / Sari")
+
             Button(
                 onClick = onRefresh, enabled = !loading,
                 modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp),
@@ -423,8 +524,7 @@ private fun SettingsPage(
                 Text(if (loading) "Guncelleniyor..." else "Simdi guncelle", fontWeight = FontWeight.Bold)
             }
             OutlinedButton(
-                onClick = onClear, modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(16.dp),
+                onClick = onClear, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Danger)
             ) {
                 Icon(Icons.Outlined.DeleteOutline, null, modifier = Modifier.size(18.dp))
@@ -432,7 +532,7 @@ private fun SettingsPage(
                 Text("Onbellegi temizle", fontWeight = FontWeight.Bold)
             }
             Text(
-                "Haberler RSS ve kaynak sitelerden cekilir. Tam metin duzenlenerek okunur. Paylasim sistem uygulamalariyla uyumludur.",
+                "Haberler internet uzerinden RSS ve kaynak sitelerden cekilir. Galatasaray ve Milli Takim kategorileri ozel filtrelenir.",
                 color = TextMuted, fontSize = 12.sp, lineHeight = 18.sp
             )
         }
@@ -459,14 +559,15 @@ private fun EmptyCard(msg: String, onRetry: () -> Unit) {
 
 @Composable
 private fun ReaderScreen(
-    article: ForzaArticle, saved: Boolean, onBack: () -> Unit, onSave: () -> Unit,
-    onShare: () -> Unit, onArticleUpdated: (ForzaArticle) -> Unit
+    article: ForzaArticle, saved: Boolean, fontScale: Float,
+    onBack: () -> Unit, onSave: () -> Unit, onShare: () -> Unit,
+    onArticleUpdated: (ForzaArticle) -> Unit
 ) {
     val context = LocalContext.current
-    var showSourcePage by remember(article.link) { mutableStateOf(false) }
+    var showSource by remember(article.link) { mutableStateOf(false) }
     var pageLoading by remember(article.link) { mutableStateOf(false) }
     var loadingFull by remember(article.link) { mutableStateOf(article.fullContent.length < 280) }
-    BackHandler(enabled = showSourcePage) { showSourcePage = false }
+    BackHandler(enabled = showSource) { showSource = false }
     LaunchedEffect(article.link) {
         if (article.fullContent.length < 280) {
             loadingFull = true
@@ -475,30 +576,33 @@ private fun ReaderScreen(
             loadingFull = false
         } else loadingFull = false
     }
-    val body = article.fullContent.ifBlank { article.summary }.ifBlank { "Bu haberin metni henuz yuklenemedi. Kaynak sayfadan okuyabilirsin." }
+    val body = article.fullContent.ifBlank { article.summary }.ifBlank {
+        "Bu haberin metni henuz yuklenemedi. Ust bardan kaynak sayfayi acabilirsin."
+    }
     val paragraphs = body.split(Regex("\\n\\s*\\n|\\n")).map { it.trim() }.filter { it.isNotBlank() }
+    val titleSp = (24 * fontScale).sp
+    val bodySp = (16.5f * fontScale).sp
+    val bodyLh = (28 * fontScale).sp
 
     Column(Modifier.fillMaxSize().background(Bg).statusBarsPadding().navigationBarsPadding()) {
-        Surface(color = Surface, tonalElevation = 0.dp) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { if (showSourcePage) showSourcePage = false else onBack() }) {
+        Surface(color = Surface) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { if (showSource) showSource = false else onBack() }) {
                     Icon(Icons.Outlined.ArrowBack, contentDescription = "Geri", tint = TextPrimary)
                 }
                 Column(Modifier.weight(1f)) {
-                    Text(if (showSourcePage) "KAYNAK" else "HABER", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
-                    Text(article.source, color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(if (showSource) "KAYNAK" else "HABER", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
+                    Text(article.source, color = Gold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 IconButton(onClick = onSave) {
-                    Icon(if (saved) Icons.Outlined.Bookmark else Icons.Outlined.BookmarkBorder, contentDescription = "Kaydet", tint = if (saved) Gold else TextPrimary)
+                    Icon(if (saved) Icons.Outlined.Bookmark else Icons.Outlined.BookmarkBorder, null, tint = if (saved) Gold else TextPrimary)
                 }
-                IconButton(onClick = onShare) { Icon(Icons.Outlined.Share, contentDescription = "Paylas", tint = TextPrimary) }
-                IconButton(onClick = {
-                    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(article.link))) }
-                }) { Icon(Icons.Outlined.OpenInNew, contentDescription = "Tarayici", tint = TextPrimary) }
+                IconButton(onClick = onShare) { Icon(Icons.Outlined.Share, null, tint = TextPrimary) }
+                IconButton(onClick = { showSource = true }) { Icon(Icons.Outlined.OpenInNew, null, tint = TextPrimary) }
             }
         }
-        if (loadingFull && !showSourcePage) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Gold, trackColor = Surface)
-        if (showSourcePage) {
+        if (loadingFull && !showSource) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Gold, trackColor = Surface)
+        if (showSource) {
             if (pageLoading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Gold, trackColor = Surface)
             AndroidView(
                 modifier = Modifier.fillMaxSize().background(Color.White),
@@ -517,13 +621,13 @@ private fun ReaderScreen(
                 update = { v -> if (v.url == null) v.loadUrl(article.link) }
             )
         } else {
-            LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 24.dp)) {
+            LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 28.dp)) {
                 item {
                     if (!article.imageUrl.isNullOrBlank()) {
                         AsyncImage(model = article.imageUrl, contentDescription = article.title, modifier = Modifier.fillMaxWidth().height(230.dp), contentScale = ContentScale.Crop)
                     } else {
                         Box(Modifier.fillMaxWidth().height(140.dp).background(Brush.linearGradient(listOf(Color(0xFF451321), Color(0xFF141923)))), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Outlined.SportsSoccer, null, tint = Color.White.copy(alpha = 0.45f), modifier = Modifier.size(44.dp))
+                            Icon(Icons.Outlined.SportsSoccer, null, tint = Color.White.copy(alpha = 0.4f), modifier = Modifier.size(44.dp))
                         }
                     }
                 }
@@ -531,46 +635,23 @@ private fun ReaderScreen(
                     Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.clip(RoundedCornerShape(8.dp)).background(Red.copy(alpha = 0.18f)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                                Text(article.source.uppercase(Locale.ROOT), color = Red, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text(article.source.uppercase(Locale.ROOT), color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                             Spacer(Modifier.width(10.dp))
                             Text(timeLabel(article.publishedAt), color = TextMuted, fontSize = 11.sp)
                         }
                         Spacer(Modifier.height(12.dp))
-                        Text(article.title, color = TextPrimary, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.2).sp)
+                        Text(article.title, color = TextPrimary, fontSize = titleSp, lineHeight = (titleSp.value * 1.3f).sp, fontWeight = FontWeight.ExtraBold)
                         Spacer(Modifier.height(14.dp))
-                        HorizontalDivider(color = Border.copy(alpha = 0.6f))
-                        Spacer(Modifier.height(6.dp))
+                        HorizontalDivider(color = Border.copy(alpha = 0.55f))
                     }
                 }
                 items(paragraphs) { para ->
-                    Text(para, color = TextPrimary, fontSize = 16.5.sp, lineHeight = 28.sp, letterSpacing = 0.12.sp, modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp))
+                    Text(para, color = TextPrimary, fontSize = bodySp, lineHeight = bodyLh, letterSpacing = 0.12.sp, modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp))
                 }
                 item {
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(16.dp))
                     Text("Kaynak: ${article.source}", color = TextMuted, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 20.dp))
-                    Spacer(Modifier.height(12.dp))
-                    Button(
-                        onClick = { showSourcePage = true },
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(50.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Red, contentColor = Color.White)
-                    ) {
-                        Icon(Icons.Outlined.OpenInNew, null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Kaynagi ac", fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedButton(
-                        onClick = onShare,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(48.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary)
-                    ) {
-                        Icon(Icons.Outlined.Share, null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Paylas", fontWeight = FontWeight.SemiBold)
-                    }
                 }
             }
         }
@@ -586,10 +667,10 @@ private fun LeadStory(article: ForzaArticle, saved: Boolean, onClick: () -> Unit
                     AsyncImage(model = article.imageUrl, contentDescription = article.title, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 } else {
                     Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF40121F), CardElevated))), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Outlined.SportsSoccer, null, tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(36.dp))
+                        Icon(Icons.Outlined.SportsSoccer, null, tint = Color.White.copy(alpha = 0.55f), modifier = Modifier.size(36.dp))
                     }
                 }
-                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)))))
+                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)))))
                 IconButton(onClick = onSave, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).size(34.dp).background(Color.Black.copy(alpha = 0.4f), CircleShape)) {
                     Icon(if (saved) Icons.Outlined.Bookmark else Icons.Outlined.BookmarkBorder, null, tint = if (saved) Gold else Color.White, modifier = Modifier.size(17.dp))
                 }
@@ -617,7 +698,7 @@ private fun NewsRow(article: ForzaArticle, saved: Boolean, onClick: () -> Unit, 
                     AsyncImage(model = article.imageUrl, contentDescription = article.title, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 } else {
                     Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF40121F), CardElevated))), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Outlined.SportsSoccer, null, tint = Color.White.copy(alpha = 0.55f), modifier = Modifier.size(24.dp))
+                        Icon(Icons.Outlined.SportsSoccer, null, tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(24.dp))
                     }
                 }
             }
