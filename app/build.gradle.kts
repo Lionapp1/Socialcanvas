@@ -12,8 +12,8 @@ android {
         applicationId = "com.forzagundem.socialcanvas"
         minSdk = 26
         targetSdk = 35
-        versionCode = 14
-        versionName = "1.6.1"
+        versionCode = 15
+        versionName = "1.7.0"
     }
 
     buildTypes {
