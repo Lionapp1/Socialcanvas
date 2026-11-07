@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.ArrowBack
@@ -81,9 +80,11 @@ private val ChipBg = Color(0xFF1A1D28)
 private fun playClick(enabled: Boolean) {
     if (!enabled) return
     runCatching {
-        val tg = ToneGenerator(AudioManager.STREAM_MUSIC, 35)
-        tg.startTone(ToneGenerator.TONE_PROP_BEEP, 40)
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ tg.release() }, 80)
+        val tg = ToneGenerator(AudioManager.STREAM_SYSTEM, 55)
+        tg.startTone(ToneGenerator.TONE_PROP_ACK, 55)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            runCatching { tg.release() }
+        }, 120)
     }
 }
 
@@ -199,12 +200,7 @@ fun HomeScreen() {
                             onRefresh = { click(); refresh() },
                             onOpen = { openArticle(it) }, onSave = { toggleSaved(it) }
                         )
-                        1 -> DiscoverPage(
-                            articles = articles,
-                            onOpen = { openArticle(it) },
-                            onCategory = { c -> click(); selected = c; tab = 0 },
-                            onSource = { s -> click(); query = s; searchMode = true; tab = 0 }
-                        )
+                        1 -> SquadPage()
                         2 -> SavedPage(
                             articles = articles.filter { it.id in savedIds },
                             onOpen = { openArticle(it) }, onSave = { toggleSaved(it) }
@@ -241,7 +237,7 @@ fun HomeScreen() {
                     modifier = Modifier.fillMaxWidth().navigationBarsPadding()
                 ) {
                     AnimatedNavItem(tab == 0, if (tab == 0) Icons.Filled.Home else Icons.Outlined.Home, "Akis") { click(); tab = 0 }
-                    AnimatedNavItem(tab == 1, if (tab == 1) Icons.Filled.Explore else Icons.Outlined.Explore, "Kesfet") { click(); tab = 1; searchMode = false }
+                    AnimatedNavItem(tab == 1, Icons.Outlined.SportsSoccer, "Kadro") { click(); tab = 1; searchMode = false }
                     AnimatedNavItem(tab == 2, if (tab == 2) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, "Kayitlar") { click(); tab = 2 }
                     AnimatedNavItem(tab == 3, if (tab == 3) Icons.Filled.Settings else Icons.Outlined.Settings, "Ayarlar") { click(); tab = 3 }
                 }
@@ -386,73 +382,29 @@ private fun FeedPage(
 }
 
 @Composable
-private fun DiscoverPage(
-    articles: List<ForzaArticle>,
-    onOpen: (ForzaArticle) -> Unit,
-    onCategory: (String) -> Unit,
-    onSource: (String) -> Unit
-) {
-    val teams = listOf(
-        Triple("Galatasaray", "GS", Color(0xFFFFC107)),
-        Triple("Milli Takim", "TR", Color(0xFFE11D36)),
-        Triple("Transfer", "TR", Gold),
-        Triple("Avrupa", "EU", Color(0xFF3B82F6))
-    )
-    val sources = ForzaNewsRepository.sources()
-    Column(Modifier.fillMaxSize()) {
-        TopBar("ForzaX", "KESFET")
-        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item { Text("TAKIMLAR VE KONULAR", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 1.1.sp) }
-            item {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    teams.forEach { (name, badge, color) ->
-                        PressScale(modifier = Modifier.weight(1f), onClick = { onCategory(name) }) {
-                            Column(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Card).padding(12.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Box(
-                                    Modifier.size(40.dp).clip(CircleShape).background(color.copy(alpha = 0.2f))
-                                        .border(1.5.dp, color, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) { Text(badge, color = color, fontWeight = FontWeight.Black, fontSize = 13.sp) }
-                                Spacer(Modifier.height(8.dp))
-                                Text(name, color = TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                            }
-                        }
-                    }
-                }
-            }
-            item { Text("KAYNAKLAR", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 1.1.sp) }
-            items(sources) { source ->
-                PressScale(onClick = { onSource(source) }) {
-                    Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Card).padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Red.copy(alpha = 0.16f)),
-                            contentAlignment = Alignment.Center
-                        ) { Text(source.take(1), color = Gold, fontWeight = FontWeight.Bold) }
-                        Spacer(Modifier.width(12.dp))
-                        Text(source, color = TextPrimary, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                        Icon(Icons.Outlined.ChevronRight, null, tint = TextMuted, modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
-            item { Text("ONE CIKANLAR", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 1.1.sp) }
-            items(articles.take(10)) { a -> NewsRow(a, false, { onOpen(a) }, {}) }
-        }
-    }
-}
-
-@Composable
 private fun SavedPage(articles: List<ForzaArticle>, onOpen: (ForzaArticle) -> Unit, onSave: (ForzaArticle) -> Unit) {
     Column(Modifier.fillMaxSize()) {
         TopBar("ForzaX", "OKUMA LISTEM")
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (articles.isEmpty()) item { EmptyCard("Henuz kayitli haber yok") {} }
-            else items(articles, key = { it.id }) { a -> NewsRow(a, true, { onOpen(a) }, { onSave(a) }) }
+            if (articles.isEmpty()) {
+                item {
+                    Column(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Card).padding(28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(Icons.Outlined.BookmarkBorder, null, tint = Gold, modifier = Modifier.size(36.dp))
+                        Spacer(Modifier.height(12.dp))
+                        Text("Henuz kayitli haber yok", color = TextPrimary, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(6.dp))
+                        Text("Haberlerde yer imine basarak buraya ekle", color = TextMuted, fontSize = 12.sp)
+                    }
+                }
+            } else {
+                item {
+                    Text("${articles.size} kayitli haber", color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                items(articles, key = { it.id }) { a -> NewsRow(a, true, { onOpen(a) }, { onSave(a) }) }
+            }
         }
     }
 }
@@ -511,7 +463,7 @@ private fun SettingsPage(
                 )
             }
 
-            SettingsCard("Surum", "ForzaX 1.7.0")
+            SettingsCard("Surum", "ForzaX 1.8.0")
             SettingsCard("Tema", "Koyu · Kirmizi / Sari")
 
             Button(
@@ -531,10 +483,6 @@ private fun SettingsPage(
                 Spacer(Modifier.width(8.dp))
                 Text("Onbellegi temizle", fontWeight = FontWeight.Bold)
             }
-            Text(
-                "Haberler internet uzerinden RSS ve kaynak sitelerden cekilir. Galatasaray ve Milli Takim kategorileri ozel filtrelenir.",
-                color = TextMuted, fontSize = 12.sp, lineHeight = 18.sp
-            )
         }
     }
 }
